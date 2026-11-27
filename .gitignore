@@ -1,0 +1,22 @@
+node_modules/
+.DS_Store
+*.log
+.gstack/
+__pycache__/
+*.pyc
+.obsidian/
+*.tmp
+graphify-out/
+explore_configs.txt
+
+# 비밀/기밀 자료 (절대 커밋 금지)
+private/
+.env
+.env.*
+*.secret
+
+# 저작권 자료(교재·강의 스캔본)
+12_side-project/Quiz Studio/resource/*.pdf
+
+# 로컬 세션 인계 메모(로컬 경로 포함)
+HANDOFF.md

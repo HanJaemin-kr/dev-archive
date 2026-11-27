@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; padding: 24px; }
+  h2 { text-align: center; margin-bottom: 6px; font-size: 1.2rem; color: #fff; }
+  .subtitle { text-align: center; font-size: 0.82rem; color: #888; margin-bottom: 20px; }
+
+  .bars-wrap {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 6px;
+    height: 220px;
+    margin-bottom: 20px;
+  }
+  .bar {
+    width: 36px;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 6px;
+    font-size: 0.78rem;
+    font-weight: bold;
+    color: #fff;
+    transition: height 0.25s ease, background 0.15s ease;
+    background: #4f8ef7;
+  }
+  .bar.comparing { background: #f7c948; }
+  .bar.swapping  { background: #f76b4f; }
+  .bar.sorted    { background: #4fcf82; }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  button {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    font-weight: 600;
+    transition: opacity 0.15s;
+  }
+  button:disabled { opacity: 0.4; cursor: default; }
+  #btn-start  { background: #4f8ef7; color: #fff; }
+  #btn-reset  { background: #333; color: #ccc; }
+  #btn-speed  { background: #555; color: #ccc; }
+
+  .info {
+    text-align: center;
+    font-size: 0.83rem;
+    color: #aaa;
+    min-height: 22px;
+    margin-bottom: 10px;
+  }
+  .step-log {
+    background: #1a1d27;
+    border-radius: 8px;
+    padding: 12px 16px;
+    max-height: 130px;
+    overflow-y: auto;
+    font-size: 0.78rem;
+    color: #aaa;
+    line-height: 1.7;
+  }
+  .step-log span { color: #f7c948; }
+  .complexity {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 14px;
+    font-size: 0.8rem;
+    color: #888;
+  }
+  .complexity b { color: #4f8ef7; }
+</style>
+</head>
+<body>
+
+<h2>🫧 버블 정렬 (Bubble Sort)</h2>
+<p class="subtitle">인접한 두 원소를 비교해 더 큰 수를 오른쪽으로 밀어냅니다</p>
+
+<div class="bars-wrap" id="bars"></div>
+
+<div class="info" id="info">시작 버튼을 눌러주세요</div>
+
+<div class="controls">
+  <button id="btn-reset">🔀 배열 초기화</button>
+  <button id="btn-start">▶ 시작</button>
+  <button id="btn-speed">속도: 보통</button>
+</div>
+
+<div class="step-log" id="log">로그가 여기에 표시됩니다...</div>
+
+<div class="complexity">
+  <div>시간복잡도 최선 <b>O(n)</b></div>
+  <div>시간복잡도 최악 <b>O(n²)</b></div>
+  <div>공간복잡도 <b>O(1)</b></div>
+</div>
+
+<script>
+const SPEEDS = [600, 300, 100];
+const SPEED_LABELS = ['속도: 느림', '속도: 보통', '속도: 빠름'];
+let speedIdx = 1;
+let arr = [];
+let running = false;
+let compareCount = 0, swapCount = 0;
+
+const barsEl  = document.getElementById('bars');
+const infoEl  = document.getElementById('info');
+const logEl   = document.getElementById('log');
+const btnStart = document.getElementById('btn-start');
+const btnReset = document.getElementById('btn-reset');
+const btnSpeed = document.getElementById('btn-speed');
+
+function randomArr() {
+  const n = 8;
+  const pool = Array.from({length: 20}, (_, i) => i + 1);
+  arr = pool.sort(() => Math.random() - 0.5).slice(0, n);
+}
+
+function render(states = {}) {
+  barsEl.innerHTML = '';
+  const max = Math.max(...arr);
+  arr.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    if (states.sorted && i >= states.sorted) bar.classList.add('sorted');
+    if (states.comparing && states.comparing.includes(i)) bar.classList.add('comparing');
+    if (states.swapping && states.swapping.includes(i)) bar.classList.add('swapping');
+    bar.style.height = `${(v / max) * 190 + 20}px`;
+    bar.textContent = v;
+    barsEl.appendChild(bar);
+  });
+}
+
+function log(msg) {
+  const line = document.createElement('div');
+  line.innerHTML = msg;
+  logEl.appendChild(line);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function bubbleSort() {
+  const n = arr.length;
+  compareCount = 0; swapCount = 0;
+  logEl.innerHTML = '';
+  log('▶ 정렬 시작');
+
+  for (let i = 0; i < n - 1; i++) {
+    let swapped = false;
+    for (let j = 0; j < n - 1 - i; j++) {
+      compareCount++;
+      render({ comparing: [j, j+1], sorted: n - i });
+      infoEl.textContent = `비교: arr[${j}]=${arr[j]} vs arr[${j+1}]=${arr[j+1]}  |  비교 ${compareCount}회 / 교환 ${swapCount}회`;
+      await sleep(SPEEDS[speedIdx]);
+
+      if (arr[j] > arr[j+1]) {
+        swapCount++;
+        log(`  🔄 ${arr[j]} ↔ ${arr[j+1]} 교환 (패스 ${i+1}, 위치 ${j}↔${j+1})`);
+        [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
+        render({ swapping: [j, j+1], sorted: n - i });
+        await sleep(SPEEDS[speedIdx]);
+        swapped = true;
+      }
+    }
+    log(`  ✅ 패스 ${i+1} 완료 → <span>${arr[n-1-i]}</span> 확정`);
+    render({ sorted: n - i });
+    await sleep(SPEEDS[speedIdx] * 0.5);
+
+    if (!swapped) {
+      log('  ⚡ 이미 정렬됨 — 조기 종료 (best case O(n))');
+      break;
+    }
+  }
+
+  render({ sorted: 0 });
+  infoEl.textContent = `✅ 정렬 완료!  총 비교 ${compareCount}회 / 교환 ${swapCount}회`;
+  log(`▶ 완료  |  비교 ${compareCount}회 / 교환 ${swapCount}회`);
+}
+
+function reset() {
+  if (running) return;
+  randomArr();
+  render();
+  infoEl.textContent = '시작 버튼을 눌러주세요';
+  logEl.innerHTML = '로그가 여기에 표시됩니다...';
+  compareCount = 0; swapCount = 0;
+}
+
+btnStart.addEventListener('click', async () => {
+  if (running) return;
+  running = true;
+  btnStart.disabled = true;
+  btnReset.disabled = true;
+  await bubbleSort();
+  running = false;
+  btnStart.disabled = false;
+  btnReset.disabled = false;
+});
+
+btnReset.addEventListener('click', reset);
+
+btnSpeed.addEventListener('click', () => {
+  speedIdx = (speedIdx + 1) % 3;
+  btnSpeed.textContent = SPEED_LABELS[speedIdx];
+});
+
+reset();
+</script>
+</body>
+</html>

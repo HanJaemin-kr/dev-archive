@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" font-family="'Malgun Gothic','Segoe UI',sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#333"/>
+    </marker>
+    <marker id="arrowIn" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#c0392b"/>
+    </marker>
+    <clipPath id="furnace">
+      <path d="M245,120 L355,120 L355,190 L422,410 L422,470 L388,560 L388,660 L212,660 L212,560 L178,470 L178,410 L245,190 Z"/>
+    </clipPath>
+  </defs>
+
+  <!-- title -->
+  <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#222">고로(Blast Furnace) 단면도</text>
+
+  <!-- internal temperature zones (clipped to furnace shape) -->
+  <g clip-path="url(#furnace)">
+    <rect x="160" y="120" width="280" height="70"  fill="#d9d9d9"/>            <!-- throat -->
+    <rect x="160" y="190" width="280" height="115" fill="#fff3cd"/>           <!-- preheat -->
+    <rect x="160" y="305" width="280" height="105" fill="#ffe0a3"/>           <!-- reduction -->
+    <rect x="160" y="410" width="280" height="90"  fill="#ffb060"/>           <!-- cohesive -->
+    <rect x="160" y="500" width="280" height="60"  fill="#ff8a4d"/>           <!-- combustion -->
+    <rect x="160" y="560" width="280" height="45"  fill="#6b4f3a"/>           <!-- slag layer -->
+    <rect x="160" y="605" width="280" height="60"  fill="#ffcf40"/>           <!-- molten iron -->
+    <!-- alternating charge layers in the throat -->
+    <rect x="248" y="128" width="104" height="8" fill="#7a5230"/>
+    <rect x="248" y="140" width="104" height="8" fill="#b5651d"/>
+    <rect x="248" y="152" width="104" height="8" fill="#7a5230"/>
+    <rect x="248" y="164" width="104" height="8" fill="#b5651d"/>
+    <rect x="248" y="176" width="104" height="8" fill="#7a5230"/>
+  </g>
+
+  <!-- furnace outline -->
+  <path d="M245,120 L355,120 L355,190 L422,410 L422,470 L388,560 L388,660 L212,660 L212,560 L178,470 L178,410 L245,190 Z"
+        fill="none" stroke="#333" stroke-width="3"/>
+
+  <!-- charging (top) -->
+  <text x="300" y="58" text-anchor="middle" font-size="13" fill="#333">① 장입: 철광석 · 코크스 · 석회석</text>
+  <line x1="300" y1="66" x2="300" y2="116" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- top gas out -->
+  <line x1="352" y1="128" x2="470" y2="90" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="474" y="88" font-size="12" fill="#333">고로가스 ↑</text>
+  <text x="474" y="103" font-size="10" fill="#777">(연료로 회수)</text>
+
+  <!-- zone labels (right) -->
+  <text x="446" y="160" font-size="12.5" fill="#333">노정 · 장입대</text>
+  <text x="446" y="252" font-size="12.5" fill="#333">예열대 200~500℃</text>
+  <text x="446" y="360" font-size="12.5" fill="#333">환원대 500~950℃</text>
+  <text x="446" y="452" font-size="12.5" fill="#333">융착대 1100~1400℃</text>
+  <text x="446" y="533" font-size="12.5" fill="#333">연소 · 적하대</text>
+
+  <!-- hot blast (tuyere) both sides -->
+  <line x1="120" y1="540" x2="203" y2="540" stroke="#c0392b" stroke-width="2.5" marker-end="url(#arrowIn)"/>
+  <line x1="480" y1="540" x2="397" y2="540" stroke="#c0392b" stroke-width="2.5" marker-end="url(#arrowIn)"/>
+  <text x="30"  y="536" font-size="12.5" fill="#c0392b" font-weight="bold">열풍(hot blast)</text>
+  <text x="30"  y="551" font-size="11" fill="#c0392b">~1200℃</text>
+  <text x="486" y="540" font-size="12.5" fill="#c0392b">송풍구(tuyere)</text>
+
+  <!-- slag out (left) -->
+  <line x1="212" y1="582" x2="130" y2="582" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="40" y="586" font-size="12.5" fill="#5c4326">슬래그(찌꺼기)</text>
+
+  <!-- molten iron out (right) -->
+  <line x1="388" y1="638" x2="475" y2="638" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="480" y="633" font-size="12.5" fill="#a86a00" font-weight="bold">용선(쇳물)</text>
+  <text x="480" y="648" font-size="11" fill="#a86a00">~1500℃, 출선구</text>
+
+  <!-- bottom note -->
+  <text x="300" y="700" text-anchor="middle" font-size="11" fill="#888">위에서 원료가 내려오고 아래에서 열풍이 올라가며 만나는 향류(counter-current) 반응로</text>
+</svg>

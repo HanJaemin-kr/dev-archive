@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 420" font-family="'Malgun Gothic','Segoe UI',sans-serif">
+  <defs>
+    <marker id="p" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#333"/>
+    </marker>
+    <path id="vane" d="M250,204 Q259,176 293,166" fill="none" stroke="#4a4f57" stroke-width="4" stroke-linecap="round"/>
+  </defs>
+
+  <text x="280" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#222">원심펌프(Centrifugal Pump) 개략도</text>
+
+  <!-- discharge nozzle (top, tangential) -->
+  <rect x="252" y="45" width="52" height="70" fill="#cdd3da" stroke="#333" stroke-width="2.5"/>
+  <line x1="278" y1="45" x2="278" y2="12" stroke="#1e88e5" stroke-width="3" marker-end="url(#p)"/>
+  <text x="312" y="70" font-size="13" fill="#1e88e5" font-weight="bold">토출(discharge)</text>
+  <text x="312" y="86" font-size="11" fill="#1e88e5">↑ 압력 높아져 배출</text>
+
+  <!-- volute casing -->
+  <circle cx="250" cy="220" r="115" fill="#cdd3da" stroke="#333" stroke-width="3"/>
+  <circle cx="250" cy="220" r="95"  fill="#eef2f6" stroke="#b8c0c9" stroke-width="1.5"/>
+
+  <!-- impeller -->
+  <circle cx="250" cy="220" r="72" fill="#9aa0a8" stroke="#555" stroke-width="2"/>
+  <use href="#vane"/>
+  <use href="#vane" transform="rotate(60 250 220)"/>
+  <use href="#vane" transform="rotate(120 250 220)"/>
+  <use href="#vane" transform="rotate(180 250 220)"/>
+  <use href="#vane" transform="rotate(240 250 220)"/>
+  <use href="#vane" transform="rotate(300 250 220)"/>
+
+  <!-- suction eye (center) -->
+  <circle cx="250" cy="220" r="24" fill="#bcd4e6" stroke="#1e88e5" stroke-width="2"/>
+  <circle cx="250" cy="220" r="10" fill="#6f6f6f"/>
+
+  <!-- rotation arrow -->
+  <path d="M250,120 A100,100 0 0 1 345,190" fill="none" stroke="#c0392b" stroke-width="2.5" marker-end="url(#p)"/>
+  <text x="330" y="150" font-size="12" fill="#c0392b">회전</text>
+
+  <!-- shaft to motor -->
+  <rect x="365" y="212" width="90" height="16" fill="#6f6f6f" stroke="#333" stroke-width="1.5"/>
+  <rect x="455" y="195" width="55" height="50" rx="4" fill="#3a3f47" stroke="#222" stroke-width="2"/>
+  <text x="482" y="224" text-anchor="middle" font-size="11" fill="#fff">모터</text>
+  <circle cx="380" cy="220" r="9" fill="#e0a020" stroke="#333" stroke-width="1.5"/>
+
+  <!-- labels -->
+  <line x1="200" y1="220" x2="70" y2="220" stroke="#1e88e5" stroke-width="1.5" marker-end="url(#p)"/>
+  <text x="14" y="210" font-size="12.5" fill="#1e88e5" font-weight="bold">흡입(suction)</text>
+  <text x="14" y="226" font-size="11" fill="#1e88e5">중심(eye)으로</text>
+  <text x="14" y="240" font-size="11" fill="#1e88e5">축방향 유입</text>
+
+  <line x1="285" y1="255" x2="360" y2="320" stroke="#333" stroke-width="1.2" marker-end="url(#p)"/>
+  <text x="330" y="338" font-size="12" fill="#333" font-weight="bold">임펠러(회전 날개)</text>
+  <text x="300" y="353" font-size="11" fill="#777">유체에 운동에너지를 줌</text>
+
+  <line x1="330" y1="300" x2="150" y2="330" stroke="#333" stroke-width="1.2" marker-end="url(#p)"/>
+  <text x="20" y="348" font-size="12" fill="#333" font-weight="bold">볼류트 케이싱</text>
+  <text x="20" y="363" font-size="11" fill="#777">넓어지며 속도→압력 전환</text>
+
+  <text x="405" y="188" font-size="11" fill="#e0a020">베어링</text>
+
+  <text x="280" y="400" text-anchor="middle" font-size="11.5" fill="#555">임펠러가 회전 → 원심력으로 유체를 바깥으로 던짐 → 속도가 압력으로 바뀌며 토출</text>
+</svg>

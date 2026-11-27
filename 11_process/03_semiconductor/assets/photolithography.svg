@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 270" font-family="'Malgun Gothic','Segoe UI',sans-serif">
+  <defs>
+    <marker id="s" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#1e88e5"/>
+    </marker>
+    <marker id="g" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L6,3 L0,6 Z" fill="#aaa"/>
+    </marker>
+  </defs>
+
+  <text x="370" y="26" text-anchor="middle" font-size="18" font-weight="bold" fill="#222">포토리소그래피(사진식각) 흐름</text>
+
+  <!-- ============ Panel 1: coating ============ -->
+  <g>
+    <rect x="20"  y="175" width="150" height="30" fill="#b0b6bd" stroke="#333" stroke-width="1.5"/>
+    <rect x="20"  y="160" width="150" height="15" fill="#6fa8dc" stroke="#2f6bb0" stroke-width="1"/>
+    <rect x="20"  y="145" width="150" height="15" fill="#f6d743" stroke="#c9a800" stroke-width="1"/>
+    <text x="95" y="235" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">① 감광액 도포</text>
+    <text x="95" y="251" text-anchor="middle" font-size="10.5" fill="#777">웨이퍼에 PR 코팅</text>
+  </g>
+  <line x1="174" y1="175" x2="190" y2="175" stroke="#aaa" stroke-width="2" marker-end="url(#g)"/>
+
+  <!-- ============ Panel 2: exposure ============ -->
+  <g>
+    <rect x="195" y="175" width="150" height="30" fill="#b0b6bd" stroke="#333" stroke-width="1.5"/>
+    <rect x="195" y="160" width="150" height="15" fill="#6fa8dc" stroke="#2f6bb0" stroke-width="1"/>
+    <!-- PR with exposed columns lighter -->
+    <rect x="195" y="145" width="150" height="15" fill="#f6d743" stroke="#c9a800" stroke-width="1"/>
+    <rect x="235" y="145" width="20" height="15" fill="#cbe58a"/>
+    <rect x="287" y="145" width="20" height="15" fill="#cbe58a"/>
+    <!-- mask with two openings -->
+    <rect x="195" y="106" width="40"  height="12" fill="#3a3f47"/>
+    <rect x="255" y="106" width="32"  height="12" fill="#3a3f47"/>
+    <rect x="307" y="106" width="38"  height="12" fill="#3a3f47"/>
+    <!-- UV light -->
+    <g stroke="#1e88e5" stroke-width="1.8">
+      <line x1="242" y1="88" x2="242" y2="104" marker-end="url(#s)"/>
+      <line x1="248" y1="88" x2="248" y2="104" marker-end="url(#s)"/>
+      <line x1="294" y1="88" x2="294" y2="104" marker-end="url(#s)"/>
+      <line x1="300" y1="88" x2="300" y2="104" marker-end="url(#s)"/>
+    </g>
+    <text x="270" y="82" text-anchor="middle" font-size="10" fill="#1e88e5">UV 빛</text>
+    <text x="355" y="112" font-size="9.5" fill="#3a3f47">마스크</text>
+    <text x="270" y="235" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">② 노광(Exposure)</text>
+    <text x="270" y="251" text-anchor="middle" font-size="10.5" fill="#777">마스크 통해 빛 조사</text>
+  </g>
+  <line x1="349" y1="175" x2="365" y2="175" stroke="#aaa" stroke-width="2" marker-end="url(#g)"/>
+
+  <!-- ============ Panel 3: develop ============ -->
+  <g>
+    <rect x="370" y="175" width="150" height="30" fill="#b0b6bd" stroke="#333" stroke-width="1.5"/>
+    <rect x="370" y="160" width="150" height="15" fill="#6fa8dc" stroke="#2f6bb0" stroke-width="1"/>
+    <!-- PR removed where exposed (positive resist) -->
+    <rect x="370" y="145" width="40"  height="15" fill="#f6d743" stroke="#c9a800" stroke-width="1"/>
+    <rect x="430" y="145" width="32"  height="15" fill="#f6d743" stroke="#c9a800" stroke-width="1"/>
+    <rect x="482" y="145" width="38"  height="15" fill="#f6d743" stroke="#c9a800" stroke-width="1"/>
+    <text x="445" y="235" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">③ 현상(Develop)</text>
+    <text x="445" y="251" text-anchor="middle" font-size="10.5" fill="#777">빛 받은 PR 제거</text>
+  </g>
+  <line x1="524" y1="175" x2="540" y2="175" stroke="#aaa" stroke-width="2" marker-end="url(#g)"/>
+
+  <!-- ============ Panel 4: etch + strip ============ -->
+  <g>
+    <rect x="545" y="175" width="150" height="30" fill="#b0b6bd" stroke="#333" stroke-width="1.5"/>
+    <!-- film etched where PR was open -->
+    <rect x="545" y="160" width="40"  height="15" fill="#6fa8dc" stroke="#2f6bb0" stroke-width="1"/>
+    <rect x="605" y="160" width="32"  height="15" fill="#6fa8dc" stroke="#2f6bb0" stroke-width="1"/>
+    <rect x="657" y="160" width="38"  height="15" fill="#6fa8dc" stroke="#2f6bb0" stroke-width="1"/>
+    <text x="620" y="235" text-anchor="middle" font-size="12.5" font-weight="bold" fill="#333">④ 식각 + PR 제거</text>
+    <text x="620" y="251" text-anchor="middle" font-size="10.5" fill="#777">패턴이 막에 전사됨</text>
+  </g>
+
+  <!-- legend -->
+  <rect x="250" y="42" width="12" height="12" fill="#b0b6bd"/><text x="266" y="52" font-size="10.5" fill="#555">실리콘</text>
+  <rect x="320" y="42" width="12" height="12" fill="#6fa8dc"/><text x="336" y="52" font-size="10.5" fill="#555">박막(산화막 등)</text>
+  <rect x="430" y="42" width="12" height="12" fill="#f6d743"/><text x="446" y="52" font-size="10.5" fill="#555">감광액(PR)</text>
+</svg>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafka 내부 구조 완전 가이드</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.65}
+
+.hero{background:linear-gradient(135deg,#312e81 0%,#4338ca 50%,#6366f1 100%);color:#fff;padding:56px 48px 48px}
+.hero-tag{font-size:.72rem;letter-spacing:2.5px;text-transform:uppercase;color:#c7d2fe;margin-bottom:14px}
+.hero h1{font-size:2.8rem;font-weight:800;margin-bottom:6px;letter-spacing:-.5px}
+.hero-sub{font-size:1rem;opacity:.8;margin-bottom:22px;max-width:660px}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:4px 14px;font-size:.78rem;margin:3px}
+
+.nav{position:sticky;top:0;z-index:50;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 40px;display:flex;gap:0;overflow-x:auto}
+.nav a{padding:13px 15px;text-decoration:none;color:#64748b;font-size:.82rem;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.nav a:hover{color:#4f46e5;border-bottom-color:#4f46e5}
+
+.container{max-width:1080px;margin:0 auto;padding:40px 24px}
+.card{background:#fff;border-radius:14px;padding:36px;margin-bottom:30px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card-title{font-size:1.35rem;font-weight:700;color:#3730a3;margin-bottom:4px}
+.card-desc{font-size:.88rem;color:#64748b;margin-bottom:24px}
+
+.chip{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:12px}
+.cg{background:#d1fae5;color:#065f46}.cb{background:#dbeafe;color:#1d4ed8}
+.cp{background:#ede9fe;color:#5b21b6}.co{background:#fef3c7;color:#92400e}
+.cr{background:#fee2e2;color:#991b1b}.cs{background:#e0e7ff;color:#3730a3}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.gi{background:#f8fafc;border-radius:9px;padding:18px;border-left:3px solid #6366f1}
+.gi h4{font-size:.92rem;color:#3730a3;margin-bottom:6px}
+.gi p{font-size:.82rem;color:#475569}
+
+.tw{overflow-x:auto;margin:18px 0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{background:#3730a3;color:#fff;padding:10px 14px;text-align:left;font-weight:600}
+td{padding:10px 14px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#f8fafc}
+.tg{color:#16a34a;font-weight:700}.tb{color:#dc2626;font-weight:700}.ty{color:#ca8a04;font-weight:700}
+
+.cb-wrap{background:#0f172a;border-radius:10px;overflow:hidden;margin:18px 0}
+.cb-head{background:#1e293b;padding:8px 18px;font-size:.7rem;color:#94a3b8;font-weight:700;letter-spacing:1px}
+pre{padding:20px;overflow-x:auto;font-size:.78rem;line-height:1.7;color:#e2e8f0}
+code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+
+.al{padding:13px 18px;border-radius:8px;margin:14px 0;font-size:.88rem}
+.al-i{background:#eef2ff;border-left:4px solid #6366f1;color:#3730a3}
+.al-t{background:#f0fdf4;border-left:4px solid #22c55e;color:#14532d}
+.al-w{background:#fefce8;border-left:4px solid #eab308;color:#713f12}
+.al-r{background:#fef2f2;border-left:4px solid #ef4444;color:#991b1b}
+
+.sv{text-align:center;margin:24px 0;overflow-x:auto}
+.sv svg{max-width:100%;height:auto}
+.sc{font-size:.78rem;color:#94a3b8;margin-top:8px;font-style:italic}
+
+.qa-item{margin-bottom:18px}
+.qq{background:#eef2ff;border-left:4px solid #4f46e5;padding:12px 16px;border-radius:4px 8px 0 0;font-weight:700;color:#3730a3;font-size:.88rem}
+.qa{background:#f8fafc;border:1px solid #e2e8f0;border-top:none;padding:12px 16px;border-radius:0 0 8px 8px;font-size:.88rem}
+
+@media(max-width:680px){.g2,.g3{grid-template-columns:1fr}.hero{padding:36px 24px}.hero h1{font-size:2rem}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-tag">Distributed Log · Event Streaming · Internals</div>
+  <h1>Apache Kafka 내부 구조</h1>
+  <p class="hero-sub">카프카를 "메시지 큐"가 아니라 <strong>분산·복제되는 append-only 커밋 로그</strong>로 이해하기.<br>디스크에 어떻게 쌓이고, 어떻게 복제되고, 왜 빠른지를 내부 구조부터 파고듭니다.</p>
+  <div>
+    <span class="badge">Append-only Log</span>
+    <span class="badge">Segment · Sparse Index</span>
+    <span class="badge">ISR · High Watermark</span>
+    <span class="badge">Zero-Copy</span>
+    <span class="badge">KRaft Controller</span>
+    <span class="badge">Log Compaction</span>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="#overview">개요·왜 빠른가</a>
+  <a href="#architecture">클러스터 구조</a>
+  <a href="#storage">저장 구조</a>
+  <a href="#record">레코드 포맷</a>
+  <a href="#producer">프로듀서 내부</a>
+  <a href="#replication">복제·ISR·HW</a>
+  <a href="#readpath">읽기·Zero-Copy</a>
+  <a href="#consumer">컨슈머·리밸런싱</a>
+  <a href="#controller">컨트롤러·KRaft</a>
+  <a href="#retention">보존·컴팩션</a>
+  <a href="#delivery">전달 보장</a>
+  <a href="#qa">면접 Q&amp;A</a>
+</nav>
+
+<div class="container">
+
+<!-- ══ 1. OVERVIEW ══ -->
+<section id="overview" class="card">
+  <span class="chip cs">Overview</span>
+  <div class="card-title">Kafka의 본질 = 분산 커밋 로그</div>
+  <div class="card-desc">카프카의 모든 특징(고처리량·재처리·순서보장·내결함성)은 "메시지를 <strong>디스크에 순차적으로 append하는 로그</strong>"라는 단 하나의 설계에서 파생됩니다.</div>
+
+  <div class="g3">
+    <div class="gi"><h4>📜 Append-only Log</h4><p>메시지를 수정/삭제하지 않고 파일 끝에 계속 이어 붙임. 각 메시지엔 순번(offset)이 매겨짐. 읽기는 offset 위치부터 순서대로.</p></div>
+    <div class="gi"><h4>💾 순차 디스크 I/O</h4><p>랜덤 I/O가 아니라 순차 쓰기/읽기 → HDD에서도 초당 수백 MB. "디스크는 느리다"는 통념을 순차 접근으로 깸.</p></div>
+    <div class="gi"><h4>🗂️ OS Page Cache 활용</h4><p>JVM 힙 대신 OS 페이지 캐시에 데이터를 둠. 최근 쓴 데이터를 컨슈머가 곧 읽으면 디스크까지 안 감(캐시 히트).</p></div>
+    <div class="gi"><h4>🚀 Zero-Copy 전송</h4><p><code>sendfile()</code>로 페이지 캐시 → 소켓 직행. 유저 공간 복사·직렬화 없이 파일을 그대로 네트워크로.</p></div>
+    <div class="gi"><h4>📦 배치 + 압축</h4><p>메시지를 낱개가 아니라 batch로 묶어 전송·저장·복제. 네트워크 왕복과 디스크 쓰기 횟수를 줄임.</p></div>
+    <div class="gi"><h4>🔀 파티션 병렬성</h4><p>토픽을 여러 파티션으로 쪼개 브로커·컨슈머에 분산. 처리량이 파티션 수에 따라 수평 확장.</p></div>
+  </div>
+
+  <div class="al al-i"><strong>핵심 관점:</strong> "큐에서 메시지를 꺼내면 사라진다"가 아니라, <strong>"로그의 어디까지 읽었는지(offset)만 컨슈머가 기억"</strong>합니다. 데이터는 보존 기간 동안 그대로 남아 여러 컨슈머가 각자 다른 위치를 읽습니다.</div>
+</section>
+
+<!-- ══ 2. ARCHITECTURE ══ -->
+<section id="architecture" class="card">
+  <span class="chip cp">Architecture</span>
+  <div class="card-title">클러스터 전체 구조</div>
+  <div class="card-desc">브로커 여러 대가 클러스터를 이루고, 각 파티션은 한 브로커가 <strong>Leader</strong>, 나머지가 <strong>Follower(복제본)</strong>를 맡습니다. 메타데이터는 Controller가 관리합니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 720 400" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="720" height="400" fill="#f8fafc" rx="10"/>
+      <text x="360" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Kafka Cluster — 파티션 Leader/Follower 분산</text>
+      <defs>
+        <marker id="a-i" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#4338ca"/></marker>
+        <marker id="a-b" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#3b82f6"/></marker>
+        <marker id="a-g" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#94a3b8"/></marker>
+      </defs>
+
+      <!-- Producers -->
+      <text x="62" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b">Producers</text>
+      <rect x="12" y="72" width="100" height="34" rx="7" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="62" y="93" text-anchor="middle" font-size="10" font-weight="bold" fill="#991b1b">수집 서버</text>
+      <rect x="12" y="150" width="100" height="34" rx="7" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="62" y="171" text-anchor="middle" font-size="10" font-weight="bold" fill="#991b1b">알람 서버</text>
+
+      <!-- Cluster box -->
+      <rect x="150" y="46" width="420" height="310" rx="12" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5" stroke-dasharray="5,4"/>
+      <text x="360" y="66" text-anchor="middle" font-size="11" font-weight="bold" fill="#4338ca">Kafka Cluster (Topic T, 파티션 3, 복제 3)</text>
+
+      <!-- Broker 1 -->
+      <rect x="166" y="80" width="126" height="120" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+      <text x="229" y="98" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">Broker 1</text>
+      <rect x="176" y="106" width="106" height="26" rx="5" fill="#4338ca"/><text x="229" y="123" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">P0 Leader</text>
+      <rect x="176" y="136" width="106" height="26" rx="5" fill="#c7d2fe"/><text x="229" y="153" text-anchor="middle" font-size="9" fill="#3730a3">P1 Follower</text>
+      <rect x="176" y="166" width="106" height="26" rx="5" fill="#c7d2fe"/><text x="229" y="183" text-anchor="middle" font-size="9" fill="#3730a3">P2 Follower</text>
+
+      <!-- Broker 2 -->
+      <rect x="298" y="80" width="126" height="120" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+      <text x="361" y="98" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">Broker 2</text>
+      <rect x="308" y="106" width="106" height="26" rx="5" fill="#c7d2fe"/><text x="361" y="123" text-anchor="middle" font-size="9" fill="#3730a3">P0 Follower</text>
+      <rect x="308" y="136" width="106" height="26" rx="5" fill="#4338ca"/><text x="361" y="153" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">P1 Leader</text>
+      <rect x="308" y="166" width="106" height="26" rx="5" fill="#c7d2fe"/><text x="361" y="183" text-anchor="middle" font-size="9" fill="#3730a3">P2 Follower</text>
+
+      <!-- Broker 3 -->
+      <rect x="430" y="80" width="126" height="120" rx="8" fill="#fff" stroke="#4338ca" stroke-width="1.5"/>
+      <text x="493" y="98" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">Broker 3</text>
+      <rect x="440" y="106" width="106" height="26" rx="5" fill="#c7d2fe"/><text x="493" y="123" text-anchor="middle" font-size="9" fill="#3730a3">P0 Follower</text>
+      <rect x="440" y="136" width="106" height="26" rx="5" fill="#c7d2fe"/><text x="493" y="153" text-anchor="middle" font-size="9" fill="#3730a3">P1 Follower</text>
+      <rect x="440" y="166" width="106" height="26" rx="5" fill="#4338ca"/><text x="493" y="183" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">P2 Leader</text>
+
+      <!-- Controller quorum -->
+      <rect x="166" y="214" width="390" height="52" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="361" y="233" text-anchor="middle" font-size="10" font-weight="bold" fill="#5b21b6">Controller Quorum (KRaft)</text>
+      <text x="361" y="251" text-anchor="middle" font-size="9" fill="#6d28d9">파티션 Leader 선출 · ISR 변경 · 메타데이터(__cluster_metadata) 관리</text>
+
+      <!-- replication note -->
+      <text x="361" y="292" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="bold">Follower가 Leader로부터 데이터를 fetch(복제)</text>
+      <text x="361" y="308" text-anchor="middle" font-size="8.5" fill="#64748b">각 파티션은 서로 다른 브로커에 Leader가 흩어져 부하 분산</text>
+
+      <!-- Producer arrows -->
+      <line x1="112" y1="89" x2="205" y2="119" stroke="#4338ca" stroke-width="1.8" marker-end="url(#a-i)"/>
+      <line x1="112" y1="167" x2="300" y2="149" stroke="#4338ca" stroke-width="1.8" marker-end="url(#a-i)"/>
+      <text x="150" y="112" font-size="8" fill="#4338ca" font-weight="bold">produce→Leader</text>
+
+      <!-- Consumers -->
+      <text x="658" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#64748b">Consumers</text>
+      <rect x="608" y="106" width="100" height="34" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="658" y="127" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">분석 그룹</text>
+      <rect x="608" y="160" width="100" height="34" rx="7" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="658" y="181" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">저장 그룹</text>
+      <line x1="556" y1="119" x2="606" y2="121" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#a-b)"/>
+      <line x1="556" y1="179" x2="606" y2="177" stroke="#3b82f6" stroke-width="1.8" marker-end="url(#a-b)"/>
+      <text x="582" y="112" font-size="8" fill="#3b82f6" font-weight="bold">fetch</text>
+
+      <text x="360" y="382" text-anchor="middle" font-size="9" fill="#94a3b8" font-style="italic">읽기·쓰기는 항상 파티션 Leader가 처리 · Follower는 복제 전용 · Controller는 메타데이터만 담당</text>
+    </svg>
+    <div class="sc">클러스터 구조 — 파티션별 Leader가 브로커에 분산되고, Follower가 복제하며, Controller가 메타데이터를 관리</div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <tr><th>구성 요소</th><th>역할</th><th>내부 포인트</th></tr>
+      <tr><td><strong>Broker</strong></td><td>메시지 저장·전송을 담당하는 서버 1대</td><td>파티션의 Leader/Follower 복제본을 로컬 디스크에 보관</td></tr>
+      <tr><td><strong>Partition</strong></td><td>토픽을 물리적으로 나눈 로그 단위</td><td>순서 보장·병렬성의 최소 단위. 디스크의 한 디렉토리</td></tr>
+      <tr><td><strong>Leader Replica</strong></td><td>해당 파티션의 모든 읽기/쓰기 처리</td><td>Producer·Consumer는 Leader하고만 통신</td></tr>
+      <tr><td><strong>Follower Replica</strong></td><td>Leader를 복제(fetch)해 장애 대비</td><td>ISR에 속해야 Leader 승격 자격</td></tr>
+      <tr><td><strong>Controller</strong></td><td>Leader 선출·ISR 관리·메타데이터</td><td>KRaft에선 Raft 쿼럼, 과거엔 ZooKeeper</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ══ 3. STORAGE ══ -->
+<section id="storage" class="card">
+  <span class="chip co">Storage</span>
+  <div class="card-title">저장 구조 — Partition → Segment → 파일</div>
+  <div class="card-desc">파티션 하나는 디스크의 <strong>디렉토리</strong>이고, 그 안은 여러 <strong>세그먼트(segment)</strong> 파일로 쪼개집니다. 각 세그먼트는 <code>.log</code>(실데이터) + <code>.index</code>(오프셋→위치) + <code>.timeindex</code>(시간→오프셋) 세트로 구성됩니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 360" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="360" fill="#f8fafc" rx="10"/>
+      <text x="350" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">파티션의 물리적 디렉토리 구조</text>
+
+      <!-- directory -->
+      <rect x="24" y="44" width="300" height="30" rx="6" fill="#3730a3"/>
+      <text x="40" y="64" font-size="11" font-weight="bold" fill="#fff">📁 /kafka-logs/pdm-vibration-0/</text>
+      <text x="335" y="64" font-size="9" fill="#64748b">← 토픽 "pdm-vibration"의 파티션 0</text>
+
+      <!-- segment 0 -->
+      <rect x="48" y="86" width="276" height="86" rx="7" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="60" y="104" font-size="10" font-weight="bold" fill="#92400e">Segment (base offset = 0)</text>
+      <rect x="60" y="112" width="252" height="18" rx="3" fill="#fef3c7"/><text x="68" y="125" font-size="9" fill="#92400e">00000000000000000000.log &nbsp;— 실제 메시지 배치</text>
+      <rect x="60" y="132" width="252" height="18" rx="3" fill="#fffbeb"/><text x="68" y="145" font-size="9" fill="#92400e">00000000000000000000.index &nbsp;— offset → 파일 위치</text>
+      <rect x="60" y="152" width="252" height="16" rx="3" fill="#fffbeb"/><text x="68" y="164" font-size="9" fill="#92400e">00000000000000000000.timeindex &nbsp;— 타임스탬프 → offset</text>
+
+      <!-- segment N -->
+      <rect x="48" y="182" width="276" height="66" rx="7" fill="#fff" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="60" y="200" font-size="10" font-weight="bold" fill="#92400e">Segment (base offset = 1500)</text>
+      <rect x="60" y="208" width="252" height="16" rx="3" fill="#fef3c7"/><text x="68" y="220" font-size="9" fill="#92400e">00000000000000001500.log</text>
+      <rect x="60" y="226" width="252" height="16" rx="3" fill="#fffbeb"/><text x="68" y="238" font-size="9" fill="#92400e">00000000000000001500.index / .timeindex</text>
+
+      <!-- active segment -->
+      <rect x="48" y="258" width="276" height="52" rx="7" fill="#eef2ff" stroke="#4338ca" stroke-width="2"/>
+      <text x="60" y="276" font-size="10" font-weight="bold" fill="#3730a3">Active Segment (base offset = 3000) ✍️</text>
+      <text x="60" y="294" font-size="9" fill="#4338ca">지금 append가 일어나는 유일한 세그먼트 (쓰기 대상)</text>
+      <text x="60" y="306" font-size="8.5" fill="#64748b">크기(1GB)·시간 초과 시 roll → 새 active segment 생성</text>
+
+      <!-- right: file naming rule + log content -->
+      <rect x="356" y="86" width="320" height="120" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="516" y="106" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">파일명 = 세그먼트의 base offset</text>
+      <text x="372" y="128" font-size="9" fill="#475569">· 20자리 zero-padding된 offset이 파일명</text>
+      <text x="372" y="146" font-size="9" fill="#475569">· 파일명만 보면 이 세그먼트의 첫 offset을 앎</text>
+      <text x="372" y="164" font-size="9" fill="#475569">· 오래된 세그먼트 통째로 삭제 = retention(빠름)</text>
+      <text x="372" y="186" font-size="9" fill="#475569">· 쓰기는 오직 active segment 끝에만(append-only)</text>
+
+      <!-- log inside -->
+      <text x="356" y="228" font-size="10" font-weight="bold" fill="#92400e">.log 안의 내용 (offset 순서대로 append)</text>
+      <g font-size="8.5">
+        <rect x="356" y="238" width="52" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="382" y="251" text-anchor="middle" fill="#92400e">off 0</text><text x="382" y="262" text-anchor="middle" fill="#92400e">msg</text>
+        <rect x="410" y="238" width="52" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="436" y="251" text-anchor="middle" fill="#92400e">off 1</text><text x="436" y="262" text-anchor="middle" fill="#92400e">msg</text>
+        <rect x="464" y="238" width="52" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="490" y="251" text-anchor="middle" fill="#92400e">off 2</text><text x="490" y="262" text-anchor="middle" fill="#92400e">msg</text>
+        <rect x="518" y="238" width="52" height="30" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="544" y="251" text-anchor="middle" fill="#92400e">off 3</text><text x="544" y="262" text-anchor="middle" fill="#92400e">msg</text>
+        <rect x="572" y="238" width="60" height="30" rx="4" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/><text x="602" y="251" text-anchor="middle" fill="#3730a3">off 4</text><text x="602" y="262" text-anchor="middle" fill="#3730a3">write→</text>
+      </g>
+      <text x="356" y="292" font-size="9" fill="#64748b">→ 한 번 쓰인 메시지는 불변(immutable). 수정/삭제 없음.</text>
+      <text x="356" y="306" font-size="9" fill="#64748b">→ offset은 파티션 내에서 단조 증가하는 정수.</text>
+    </svg>
+    <div class="sc">파티션 = 디렉토리, 세그먼트 = 파일 세트. 쓰기는 active segment 끝에만, 삭제는 오래된 세그먼트 통째로</div>
+  </div>
+
+  <h4 style="color:#3730a3;margin:22px 0 6px">Sparse Index — offset으로 위치를 어떻게 찾나</h4>
+  <p style="font-size:.88rem;color:#475569;margin-bottom:8px">모든 메시지를 인덱싱하면 인덱스가 너무 커지므로, 카프카는 <strong>일정 간격(기본 4KB)마다 하나씩만</strong> 기록하는 sparse index를 씁니다. 원하는 offset의 <em>가장 가까운 이전 인덱스 항목</em>으로 점프한 뒤, 거기서부터 <code>.log</code>를 순차 스캔합니다.</p>
+
+  <div class="sv">
+    <svg viewBox="0 0 680 260" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="680" height="260" fill="#f8fafc" rx="10"/>
+      <text x="340" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">offset 조회 = 이진탐색(index) + 순차스캔(.log)</text>
+      <text x="340" y="46" text-anchor="middle" font-size="10" fill="#4338ca" font-weight="bold">"offset 5를 읽어줘"</text>
+
+      <!-- .index -->
+      <text x="150" y="72" text-anchor="middle" font-size="10" font-weight="bold" fill="#92400e">.index (sparse, offset→byte position)</text>
+      <g font-size="9">
+        <rect x="40" y="82" width="220" height="24" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="150" y="98" text-anchor="middle" fill="#92400e">rel offset 0 → position 0</text>
+        <rect x="40" y="110" width="220" height="24" rx="4" fill="#fde68a" stroke="#f59e0b" stroke-width="2"/><text x="150" y="126" text-anchor="middle" fill="#92400e" font-weight="bold">rel offset 3 → position 4096</text>
+        <rect x="40" y="138" width="220" height="24" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="150" y="154" text-anchor="middle" fill="#92400e">rel offset 7 → position 8192</text>
+      </g>
+      <text x="150" y="182" text-anchor="middle" font-size="8.5" fill="#64748b">① offset 5 ≤ 7 이고 ≥ 3 → offset 3 항목 선택</text>
+      <text x="150" y="196" text-anchor="middle" font-size="8.5" fill="#64748b">(이진탐색으로 5보다 작은 최대 항목 = 3)</text>
+
+      <!-- arrow -->
+      <line x1="262" y1="122" x2="360" y2="122" stroke="#4338ca" stroke-width="2" marker-end="url(#a-i)"/>
+      <text x="311" y="114" text-anchor="middle" font-size="8.5" fill="#4338ca">position 4096로 점프</text>
+
+      <!-- .log -->
+      <text x="510" y="72" text-anchor="middle" font-size="10" font-weight="bold" fill="#92400e">.log (position 4096부터 순차 스캔)</text>
+      <g font-size="9">
+        <rect x="380" y="100" width="60" height="44" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="410" y="120" text-anchor="middle" fill="#92400e">off 3</text><text x="410" y="134" text-anchor="middle" fill="#94a3b8">4096</text>
+        <rect x="442" y="100" width="60" height="44" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="472" y="120" text-anchor="middle" fill="#92400e">off 4</text>
+        <rect x="504" y="100" width="60" height="44" rx="4" fill="#c7f9cc" stroke="#16a34a" stroke-width="2"/><text x="534" y="120" text-anchor="middle" fill="#166534" font-weight="bold">off 5 ✓</text><text x="534" y="134" text-anchor="middle" fill="#16a34a">찾음</text>
+        <rect x="566" y="100" width="60" height="44" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="596" y="120" text-anchor="middle" fill="#92400e">off 6</text>
+      </g>
+      <text x="510" y="176" text-anchor="middle" font-size="8.5" fill="#64748b">② 4096에서 3→4→5 순차로 읽어 offset 5 도달</text>
+      <text x="510" y="190" text-anchor="middle" font-size="8.5" fill="#64748b">스캔은 인덱스 간격(≈4KB) 내로 제한됨</text>
+
+      <text x="340" y="232" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="bold">인덱스가 작아 메모리 매핑(mmap) 가능 → 조회가 O(log n) + 짧은 순차스캔으로 매우 빠름</text>
+    </svg>
+    <div class="sc">Sparse index로 대략 위치까지 점프 후 짧게 순차 스캔 — 인덱스 크기와 조회 속도의 균형</div>
+  </div>
+</section>
+
+<!-- ══ 4. RECORD FORMAT ══ -->
+<section id="record" class="card">
+  <span class="chip co">Record Format</span>
+  <div class="card-title">레코드 배치 포맷 (on-disk / on-wire)</div>
+  <div class="card-desc">카프카는 메시지를 낱개가 아니라 <strong>Record Batch</strong> 단위로 저장·전송합니다(v2 포맷, Kafka 0.11+). Producer가 만든 배치가 <em>그대로</em> 디스크에 쓰이고 컨슈머에게 <em>그대로</em> 전달됩니다 → 재압축·재직렬화 불필요.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 680 360" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="680" height="360" fill="#f8fafc" rx="10"/>
+      <text x="340" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Record Batch (v2) 구조</text>
+
+      <!-- batch header -->
+      <rect x="40" y="44" width="600" height="150" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+      <text x="52" y="62" font-size="10" font-weight="bold" fill="#3730a3">Batch Header (배치 공통 메타데이터 — 한 번만 저장)</text>
+      <g font-size="8.5" fill="#3730a3">
+        <rect x="52" y="70" width="130" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="117" y="87" text-anchor="middle">baseOffset (int64)</text>
+        <rect x="188" y="70" width="130" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="253" y="87" text-anchor="middle">batchLength</text>
+        <rect x="324" y="70" width="150" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="399" y="87" text-anchor="middle">partitionLeaderEpoch</text>
+        <rect x="480" y="70" width="80" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="520" y="87" text-anchor="middle">magic=2</text>
+        <rect x="566" y="70" width="66" height="26" rx="4" fill="#fee2e2" stroke="#ef4444"/><text x="599" y="87" text-anchor="middle" fill="#991b1b">CRC32C</text>
+
+        <rect x="52" y="100" width="120" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="112" y="117" text-anchor="middle">attributes (압축·txn)</text>
+        <rect x="178" y="100" width="120" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="238" y="117" text-anchor="middle">lastOffsetDelta</text>
+        <rect x="304" y="100" width="150" height="26" rx="4" fill="#fff" stroke="#c7d2fe"/><text x="379" y="117" text-anchor="middle">baseTimestamp / maxTimestamp</text>
+        <rect x="460" y="100" width="172" height="26" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="546" y="117" text-anchor="middle" fill="#92400e">producerId / epoch / baseSeq</text>
+      </g>
+      <text x="52" y="146" font-size="8.5" fill="#4338ca">▸ attributes에 압축코덱(none/gzip/snappy/lz4/zstd) · 트랜잭션 여부 비트</text>
+      <text x="52" y="162" font-size="8.5" fill="#92400e">▸ producerId·seq → 멱등성(중복 제거)·정확히 한 번의 근거</text>
+      <text x="52" y="178" font-size="8.5" fill="#991b1b">▸ CRC로 배치 무결성 검증 · magic=2는 포맷 버전</text>
+
+      <!-- records -->
+      <rect x="40" y="206" width="600" height="120" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="52" y="224" font-size="10" font-weight="bold" fill="#92400e">Records (배치 안의 개별 레코드들 — 압축은 이 묶음 전체에 적용)</text>
+      <g font-size="8.5" fill="#92400e">
+        <rect x="52" y="232" width="280" height="80" rx="5" fill="#fff" stroke="#fbbf24"/>
+        <text x="62" y="248" font-weight="bold">Record #0</text>
+        <text x="62" y="264">length · attributes</text>
+        <text x="62" y="278">timestampDelta · <b>offsetDelta</b></text>
+        <text x="62" y="292">keyLength · key · valueLength · value</text>
+        <text x="62" y="306">headers[] (사용자 정의 K/V)</text>
+
+        <rect x="344" y="232" width="286" height="80" rx="5" fill="#fff" stroke="#fbbf24"/>
+        <text x="354" y="248" font-weight="bold">Record #1 …</text>
+        <text x="354" y="266">실제 offset = baseOffset + offsetDelta</text>
+        <text x="354" y="282">실제 ts = baseTimestamp + timestampDelta</text>
+        <text x="354" y="300" fill="#4338ca">→ delta 저장으로 공간 절약(가변길이 varint)</text>
+      </g>
+    </svg>
+    <div class="sc">배치 헤더는 한 번만, 개별 레코드는 delta로 압축 저장 — 오프셋/타임스탬프는 base+delta로 복원</div>
+  </div>
+
+  <div class="al al-t"><strong>왜 이렇게?</strong> ① 공통 메타를 배치당 1회만 저장(공간↓) ② 압축을 배치 단위로 적용(압축률↑) ③ Producer가 압축·직렬화한 배치를 브로커가 <strong>그대로 저장</strong>하고 Consumer에게 <strong>그대로 전달</strong> → 브로커 CPU 절약 + zero-copy 가능.</div>
+</section>
+
+<!-- ══ 5. PRODUCER INTERNALS ══ -->
+<section id="producer" class="card">
+  <span class="chip cr">Producer</span>
+  <div class="card-title">프로듀서 내부 동작</div>
+  <div class="card-desc"><code>send()</code>는 즉시 전송이 아니라 <strong>버퍼에 쌓는 것</strong>입니다. 별도 Sender 스레드가 파티션별로 배치를 모아 브로커로 보냅니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="300" fill="#f8fafc" rx="10"/>
+      <text x="350" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Producer 내부 파이프라인</text>
+
+      <rect x="20" y="50" width="96" height="50" rx="7" fill="#fee2e2" stroke="#ef4444"/><text x="68" y="72" text-anchor="middle" font-size="10" font-weight="bold" fill="#991b1b">send(record)</text><text x="68" y="88" text-anchor="middle" font-size="8" fill="#dc2626">앱 스레드</text>
+
+      <rect x="132" y="50" width="96" height="50" rx="7" fill="#fff" stroke="#4338ca"/><text x="180" y="70" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#3730a3">Serializer</text><text x="180" y="86" text-anchor="middle" font-size="8" fill="#64748b">key/value→bytes</text>
+
+      <rect x="244" y="50" width="96" height="50" rx="7" fill="#fff" stroke="#4338ca"/><text x="292" y="70" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#3730a3">Partitioner</text><text x="292" y="86" text-anchor="middle" font-size="8" fill="#64748b">→ 파티션 결정</text>
+
+      <!-- accumulator -->
+      <rect x="356" y="44" width="180" height="150" rx="8" fill="#eef2ff" stroke="#4338ca" stroke-width="1.5"/>
+      <text x="446" y="62" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">RecordAccumulator (버퍼)</text>
+      <rect x="368" y="72" width="156" height="34" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="446" y="86" text-anchor="middle" font-size="8.5" fill="#3730a3">P0 큐: [batch][batch..]</text><text x="446" y="99" text-anchor="middle" font-size="8" fill="#94a3b8">batch.size까지 채움</text>
+      <rect x="368" y="112" width="156" height="30" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="446" y="131" text-anchor="middle" font-size="8.5" fill="#3730a3">P1 큐: [batch]</text>
+      <rect x="368" y="148" width="156" height="30" rx="5" fill="#fff" stroke="#c7d2fe"/><text x="446" y="167" text-anchor="middle" font-size="8.5" fill="#3730a3">P2 큐: [batch]</text>
+
+      <!-- sender -->
+      <rect x="556" y="70" width="120" height="70" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="616" y="92" text-anchor="middle" font-size="10" font-weight="bold" fill="#5b21b6">Sender 스레드</text>
+      <text x="616" y="110" text-anchor="middle" font-size="8" fill="#6d28d9">배치 모아 전송</text>
+      <text x="616" y="124" text-anchor="middle" font-size="8" fill="#6d28d9">acks 대기·재시도</text>
+
+      <line x1="116" y1="75" x2="130" y2="75" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a-g)"/>
+      <line x1="228" y1="75" x2="242" y2="75" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a-g)"/>
+      <line x1="340" y1="75" x2="354" y2="75" stroke="#94a3b8" stroke-width="1.6" marker-end="url(#a-g)"/>
+      <line x1="536" y1="105" x2="554" y2="105" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#a-i)"/>
+      <line x1="616" y1="140" x2="616" y2="168" stroke="#7c3aed" stroke-width="1.8" marker-end="url(#a-i)"/>
+      <rect x="556" y="170" width="120" height="30" rx="6" fill="#4338ca"/><text x="616" y="189" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">→ Broker (Leader)</text>
+
+      <text x="290" y="230" font-size="9" fill="#475569"><tspan font-weight="bold" fill="#4338ca">전송 트리거:</tspan> 배치가 batch.size(기본 16KB) 다 참 &nbsp;OR&nbsp; linger.ms 시간 경과</text>
+      <text x="290" y="248" font-size="9" fill="#475569"><tspan font-weight="bold" fill="#4338ca">파티셔너:</tspan> key 있으면 hash(key)%파티션 → 같은 key=같은 파티션(순서보장). key 없으면 sticky partitioner로 한 배치를 한 파티션에 몰아 효율↑</text>
+      <text x="290" y="266" font-size="9" fill="#475569"><tspan font-weight="bold" fill="#4338ca">버퍼 한계:</tspan> buffer.memory 초과 시 send()가 max.block.ms 동안 블로킹</text>
+      <text x="60" y="230" font-size="9" font-weight="bold" fill="#3730a3">linger.ms↑</text><text x="60" y="246" font-size="8.5" fill="#64748b">지연↑ 처리량↑</text>
+      <text x="60" y="266" font-size="8.5" fill="#64748b">(배치가 커짐)</text>
+    </svg>
+    <div class="sc">send()는 버퍼링 → Sender 스레드가 batch.size / linger.ms 조건으로 묶어 전송</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <strong>acks — 쓰기 확인 수준</strong>
+      <div class="tw" style="margin-top:8px">
+        <table>
+          <tr><th>acks</th><th>의미</th><th>트레이드오프</th></tr>
+          <tr><td><code>0</code></td><td>보내고 끝(확인 X)</td><td class="tb">유실 가능·최고 속도</td></tr>
+          <tr><td><code>1</code></td><td>Leader만 기록 확인</td><td class="ty">Leader 죽으면 유실 가능</td></tr>
+          <tr><td><code>all</code></td><td>ISR 전체 기록 확인</td><td class="tg">유실 없음·상대적 느림</td></tr>
+        </table>
+      </div>
+    </div>
+    <div>
+      <strong>멱등성 & 순서 (idempotent producer)</strong>
+      <div class="al al-i" style="margin-top:8px">
+        <code>enable.idempotence=true</code> → Producer마다 <strong>PID + 파티션별 시퀀스 번호</strong>를 붙임.<br>
+        브로커가 seq를 검사해 <strong>재시도로 인한 중복을 제거</strong>하고 순서를 보장.<br>
+        <code>acks=all</code> + <code>max.in.flight≤5</code>와 함께 exactly-once의 토대.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 6. REPLICATION ══ -->
+<section id="replication" class="card">
+  <span class="chip cs">Replication</span>
+  <div class="card-title">복제 · ISR · High Watermark</div>
+  <div class="card-desc">Follower는 Leader에게서 데이터를 <strong>fetch</strong>해 복제합니다. 충분히 따라잡은 복제본 집합이 <strong>ISR(In-Sync Replicas)</strong>, 컨슈머가 볼 수 있는 안전한 경계선이 <strong>High Watermark(HW)</strong>입니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 340" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="340" fill="#f8fafc" rx="10"/>
+      <text x="350" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">LEO · High Watermark · ISR</text>
+
+      <!-- Leader log -->
+      <text x="60" y="58" font-size="10" font-weight="bold" fill="#3730a3">Leader (Broker 1)</text>
+      <g font-size="9">
+        <rect x="60" y="66" width="40" height="34" fill="#4338ca"/><text x="80" y="87" text-anchor="middle" fill="#fff">0</text>
+        <rect x="100" y="66" width="40" height="34" fill="#4338ca"/><text x="120" y="87" text-anchor="middle" fill="#fff">1</text>
+        <rect x="140" y="66" width="40" height="34" fill="#4338ca"/><text x="160" y="87" text-anchor="middle" fill="#fff">2</text>
+        <rect x="180" y="66" width="40" height="34" fill="#4338ca"/><text x="200" y="87" text-anchor="middle" fill="#fff">3</text>
+        <rect x="220" y="66" width="40" height="34" fill="#818cf8"/><text x="240" y="87" text-anchor="middle" fill="#fff">4</text>
+        <rect x="260" y="66" width="40" height="34" fill="#c7d2fe"/><text x="280" y="87" text-anchor="middle" fill="#3730a3">5</text>
+      </g>
+      <!-- HW & LEO markers leader -->
+      <line x1="220" y1="60" x2="220" y2="112" stroke="#16a34a" stroke-width="2.5"/>
+      <text x="220" y="126" text-anchor="middle" font-size="8.5" fill="#16a34a" font-weight="bold">HW=4</text>
+      <line x1="300" y1="60" x2="300" y2="112" stroke="#ef4444" stroke-width="2.5" stroke-dasharray="4,3"/>
+      <text x="300" y="126" text-anchor="middle" font-size="8.5" fill="#ef4444" font-weight="bold">LEO=6</text>
+
+      <!-- Follower 2 -->
+      <text x="60" y="164" font-size="10" font-weight="bold" fill="#3730a3">Follower (Broker 2) ∈ ISR</text>
+      <g font-size="9">
+        <rect x="60" y="172" width="40" height="34" fill="#c7d2fe"/><text x="80" y="193" text-anchor="middle" fill="#3730a3">0</text>
+        <rect x="100" y="172" width="40" height="34" fill="#c7d2fe"/><text x="120" y="193" text-anchor="middle" fill="#3730a3">1</text>
+        <rect x="140" y="172" width="40" height="34" fill="#c7d2fe"/><text x="160" y="193" text-anchor="middle" fill="#3730a3">2</text>
+        <rect x="180" y="172" width="40" height="34" fill="#c7d2fe"/><text x="200" y="193" text-anchor="middle" fill="#3730a3">3</text>
+        <rect x="220" y="172" width="40" height="34" fill="#e0e7ff"/><text x="240" y="193" text-anchor="middle" fill="#3730a3">4</text>
+      </g>
+      <text x="272" y="193" font-size="8.5" fill="#16a34a">LEO=5 (거의 따라잡음)</text>
+
+      <!-- Follower 3 lagging -->
+      <text x="60" y="244" font-size="10" font-weight="bold" fill="#991b1b">Follower (Broker 3) — 지연 → ISR 탈락 위험</text>
+      <g font-size="9">
+        <rect x="60" y="252" width="40" height="34" fill="#fecaca"/><text x="80" y="273" text-anchor="middle" fill="#991b1b">0</text>
+        <rect x="100" y="252" width="40" height="34" fill="#fecaca"/><text x="120" y="273" text-anchor="middle" fill="#991b1b">1</text>
+        <rect x="140" y="252" width="40" height="34" fill="#fecaca"/><text x="160" y="273" text-anchor="middle" fill="#991b1b">2</text>
+      </g>
+      <text x="192" y="273" font-size="8.5" fill="#991b1b">LEO=3 (replica.lag.time 초과 시 ISR에서 제외)</text>
+
+      <!-- legend -->
+      <rect x="360" y="60" width="320" height="250" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="520" y="80" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">용어 정리</text>
+      <text x="374" y="104" font-size="9" fill="#3730a3" font-weight="bold">LEO (Log End Offset)</text>
+      <text x="374" y="119" font-size="8.5" fill="#475569">각 복제본이 마지막으로 쓴 다음 offset</text>
+      <text x="374" y="140" font-size="9" fill="#16a34a" font-weight="bold">HW (High Watermark)</text>
+      <text x="374" y="155" font-size="8.5" fill="#475569">ISR <b>모두가</b> 복제 완료한 offset. 컨슈머는</text>
+      <text x="374" y="168" font-size="8.5" fill="#475569">HW 미만까지만 읽을 수 있음(=committed)</text>
+      <text x="374" y="189" font-size="9" fill="#ef4444" font-weight="bold">HW~LEO 구간 (여기선 4~5)</text>
+      <text x="374" y="204" font-size="8.5" fill="#475569">아직 복제 안 끝난 uncommitted. 컨슈머에게</text>
+      <text x="374" y="217" font-size="8.5" fill="#475569">안 보임 → Leader 장애 시 유실돼도 안전</text>
+      <text x="374" y="238" font-size="9" fill="#3730a3" font-weight="bold">ISR</text>
+      <text x="374" y="253" font-size="8.5" fill="#475569">Leader를 제 시간에 따라잡은 복제본 집합.</text>
+      <text x="374" y="266" font-size="8.5" fill="#475569">acks=all은 ISR 전원 기록을 기다림</text>
+      <text x="374" y="287" font-size="8.5" fill="#991b1b">min.insync.replicas=2 → ISR&lt;2면</text>
+      <text x="374" y="300" font-size="8.5" fill="#991b1b">acks=all 쓰기 거부(가용성보다 안전 택함)</text>
+    </svg>
+    <div class="sc">컨슈머는 HW까지만 읽음 → 복제 안 끝난 데이터는 노출 안 됨. ISR·min.insync.replicas가 유실 방지의 핵심</div>
+  </div>
+
+  <div class="al al-w"><strong>Leader 장애 시나리오:</strong> Controller가 ISR 중 하나를 새 Leader로 승격. ISR 밖 복제본이 승격되면(<code>unclean.leader.election=true</code>) 데이터 유실 가능 → 운영에선 보통 <code>false</code>로 안전 우선.</div>
+</section>
+
+<!-- ══ 7. READ PATH / ZERO-COPY ══ -->
+<section id="readpath" class="card">
+  <span class="chip cg">Read Path</span>
+  <div class="card-title">읽기 경로 & Zero-Copy</div>
+  <div class="card-desc">컨슈머의 fetch 요청에 대해, 브로커는 파일 데이터를 유저 공간으로 복사하지 않고 <strong><code>sendfile()</code></strong>로 페이지 캐시에서 소켓으로 직접 보냅니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 320" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="320" fill="#f8fafc" rx="10"/>
+      <text x="350" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">전통 방식(4번 복사) vs Zero-Copy(sendfile)</text>
+
+      <!-- traditional -->
+      <text x="175" y="52" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">❌ 전통적 read + send</text>
+      <rect x="40" y="64" width="270" height="200" rx="8" fill="#fef2f2" stroke="#ef4444" stroke-width="1.2"/>
+      <rect x="60" y="78" width="100" height="30" rx="5" fill="#fff" stroke="#94a3b8"/><text x="110" y="97" text-anchor="middle" font-size="8.5" fill="#334155">Disk</text>
+      <rect x="60" y="122" width="100" height="30" rx="5" fill="#fde68a" stroke="#f59e0b"/><text x="110" y="141" text-anchor="middle" font-size="8.5" fill="#92400e">Page Cache(커널)</text>
+      <rect x="60" y="166" width="100" height="30" rx="5" fill="#fecaca" stroke="#ef4444"/><text x="110" y="185" text-anchor="middle" font-size="8.5" fill="#991b1b">App Buffer(유저)</text>
+      <rect x="60" y="210" width="100" height="30" rx="5" fill="#fde68a" stroke="#f59e0b"/><text x="110" y="229" text-anchor="middle" font-size="8.5" fill="#92400e">Socket Buffer(커널)</text>
+      <rect x="200" y="210" width="90" height="30" rx="5" fill="#fff" stroke="#94a3b8"/><text x="245" y="229" text-anchor="middle" font-size="8.5" fill="#334155">NIC</text>
+
+      <line x1="110" y1="108" x2="110" y2="120" stroke="#ef4444" stroke-width="1.6" marker-end="url(#a-r)"/>
+      <line x1="110" y1="152" x2="110" y2="164" stroke="#ef4444" stroke-width="1.6" marker-end="url(#a-r)"/>
+      <line x1="110" y1="196" x2="110" y2="208" stroke="#ef4444" stroke-width="1.6" marker-end="url(#a-r)"/>
+      <line x1="160" y1="225" x2="198" y2="225" stroke="#ef4444" stroke-width="1.6" marker-end="url(#a-r)"/>
+      <text x="245" y="258" text-anchor="middle" font-size="8" fill="#991b1b">복사 4회 · 컨텍스트 스위치 4회</text>
+      <defs><marker id="a-r" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#ef4444"/></marker>
+      <marker id="a-gr" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#16a34a"/></marker></defs>
+
+      <!-- zero copy -->
+      <text x="525" y="52" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">✅ Zero-Copy (sendfile)</text>
+      <rect x="390" y="64" width="290" height="200" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.2"/>
+      <rect x="410" y="90" width="110" height="34" rx="5" fill="#fff" stroke="#94a3b8"/><text x="465" y="111" text-anchor="middle" font-size="8.5" fill="#334155">Disk</text>
+      <rect x="410" y="150" width="110" height="34" rx="5" fill="#dcfce7" stroke="#22c55e"/><text x="465" y="167" text-anchor="middle" font-size="8.5" fill="#166534">Page Cache</text><text x="465" y="179" text-anchor="middle" font-size="7.5" fill="#16a34a">(커널)</text>
+      <rect x="560" y="150" width="100" height="34" rx="5" fill="#fff" stroke="#94a3b8"/><text x="610" y="171" text-anchor="middle" font-size="8.5" fill="#334155">NIC → Consumer</text>
+
+      <line x1="465" y1="124" x2="465" y2="148" stroke="#16a34a" stroke-width="1.6" marker-end="url(#a-gr)"/>
+      <line x1="520" y1="167" x2="558" y2="167" stroke="#16a34a" stroke-width="2.4" marker-end="url(#a-gr)"/>
+      <text x="540" y="150" text-anchor="middle" font-size="8" fill="#166534" font-weight="bold">sendfile()</text>
+      <text x="525" y="212" text-anchor="middle" font-size="8.5" fill="#166534">유저 공간 복사 없음 · 직렬화 없음</text>
+      <text x="525" y="228" text-anchor="middle" font-size="8.5" fill="#166534">배치를 그대로 소켓으로 → 복사 ~0회</text>
+      <text x="525" y="248" text-anchor="middle" font-size="8" fill="#16a34a" font-style="italic">가능 이유: 브로커는 배치를 재가공하지 않음</text>
+
+      <text x="350" y="292" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="bold">최근 쓴 데이터를 곧바로 읽는 컨슈머 → 페이지 캐시 히트 → 디스크 접근조차 없이 전송</text>
+      <text x="350" y="308" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-style="italic">※ TLS 암호화나 브로커 측 재압축이 필요하면 zero-copy는 적용되지 않음</text>
+    </svg>
+    <div class="sc">Zero-copy는 브로커가 배치를 "그대로 전달"하기에 가능 — 카프카 고처리량의 핵심 메커니즘</div>
+  </div>
+</section>
+
+<!-- ══ 8. CONSUMER / REBALANCE ══ -->
+<section id="consumer" class="card">
+  <span class="chip cb">Consumer</span>
+  <div class="card-title">컨슈머 그룹 · 리밸런싱 · 오프셋</div>
+  <div class="card-desc">한 그룹 안에서 파티션은 컨슈머에게 <strong>겹치지 않게 배정</strong>됩니다. 멤버 변화가 생기면 <strong>Group Coordinator</strong>가 재배정(rebalance)합니다. 각자 어디까지 읽었는지는 내부 토픽 <code>__consumer_offsets</code>에 저장됩니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 330" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="330" fill="#f8fafc" rx="10"/>
+      <text x="350" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">컨슈머 그룹 파티션 배정 &amp; 리밸런싱</text>
+
+      <!-- partitions -->
+      <text x="120" y="56" text-anchor="middle" font-size="10" font-weight="bold" fill="#3730a3">Topic 파티션 (4개)</text>
+      <rect x="40" y="66" width="160" height="26" rx="5" fill="#4338ca"/><text x="120" y="83" text-anchor="middle" font-size="9" fill="#fff">Partition 0</text>
+      <rect x="40" y="98" width="160" height="26" rx="5" fill="#4338ca"/><text x="120" y="115" text-anchor="middle" font-size="9" fill="#fff">Partition 1</text>
+      <rect x="40" y="130" width="160" height="26" rx="5" fill="#4338ca"/><text x="120" y="147" text-anchor="middle" font-size="9" fill="#fff">Partition 2</text>
+      <rect x="40" y="162" width="160" height="26" rx="5" fill="#4338ca"/><text x="120" y="179" text-anchor="middle" font-size="9" fill="#fff">Partition 3</text>
+
+      <!-- before -->
+      <text x="360" y="56" text-anchor="middle" font-size="10" font-weight="bold" fill="#1d4ed8">그룹 "analysis" (컨슈머 2)</text>
+      <rect x="270" y="66" width="180" height="52" rx="6" fill="#dbeafe" stroke="#3b82f6"/><text x="360" y="86" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1d4ed8">Consumer A</text><text x="360" y="102" text-anchor="middle" font-size="8.5" fill="#3b82f6">P0, P1 담당</text>
+      <rect x="270" y="128" width="180" height="52" rx="6" fill="#dbeafe" stroke="#3b82f6"/><text x="360" y="148" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1d4ed8">Consumer B</text><text x="360" y="164" text-anchor="middle" font-size="8.5" fill="#3b82f6">P2, P3 담당</text>
+
+      <line x1="200" y1="79" x2="268" y2="86" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a-b)"/>
+      <line x1="200" y1="111" x2="268" y2="94" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a-b)"/>
+      <line x1="200" y1="143" x2="268" y2="148" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a-b)"/>
+      <line x1="200" y1="175" x2="268" y2="156" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#a-b)"/>
+
+      <!-- coordinator -->
+      <rect x="500" y="66" width="180" height="114" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="590" y="86" text-anchor="middle" font-size="10" font-weight="bold" fill="#5b21b6">Group Coordinator</text>
+      <text x="514" y="106" font-size="8.5" fill="#6d28d9">· 그룹 멤버십 관리(heartbeat)</text>
+      <text x="514" y="122" font-size="8.5" fill="#6d28d9">· 파티션 배정 조율(generation)</text>
+      <text x="514" y="138" font-size="8.5" fill="#6d28d9">· 커밋된 offset 보관</text>
+      <text x="514" y="158" font-size="8.5" fill="#5b21b6" font-weight="bold">__consumer_offsets</text>
+      <text x="514" y="172" font-size="8" fill="#6d28d9">(내부 토픽, 50파티션 기본)</text>
+
+      <!-- rebalance note -->
+      <rect x="270" y="200" width="410" height="110" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="475" y="220" text-anchor="middle" font-size="10" font-weight="bold" fill="#991b1b">리밸런싱이 일어나는 때</text>
+      <text x="286" y="240" font-size="8.5" fill="#475569">· 컨슈머 추가/제거/장애(heartbeat 끊김) · 파티션 수 증가 · 구독 변경</text>
+      <text x="286" y="262" font-size="9" fill="#3730a3" font-weight="bold">Eager (전통)</text>
+      <text x="286" y="276" font-size="8.5" fill="#475569">전원이 파티션을 놓고(멈춤) 다시 배정 → "stop-the-world" 지연</text>
+      <text x="286" y="296" font-size="9" fill="#16a34a" font-weight="bold">Cooperative / Incremental (권장)</text>
+      <text x="286" y="310" font-size="8.5" fill="#475569">바뀌는 파티션만 넘김 → 나머지는 계속 처리(중단 최소화)</text>
+
+      <line x1="450" y1="123" x2="498" y2="120" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#a-i)"/>
+      <text x="474" y="114" font-size="8" fill="#7c3aed">heartbeat/commit</text>
+
+      <text x="120" y="212" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-style="italic">파티션 수 ≥ 컨슈머 수여야</text>
+      <text x="120" y="226" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-style="italic">모든 컨슈머가 일함</text>
+      <text x="120" y="240" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-style="italic">(파티션=병렬성 상한)</text>
+    </svg>
+    <div class="sc">그룹 내 파티션은 배타적 배정 · Coordinator가 리밸런싱 · offset은 __consumer_offsets에 커밋</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <strong>offset 커밋 = "여기까지 처리했다" 표시</strong>
+      <div class="al al-i" style="margin-top:8px">
+        커밋된 offset은 <strong>다음에 읽을 위치</strong>. 재시작하면 그 지점부터 이어 읽음.<br>
+        <b>auto commit</b>: 주기적 자동(간단하나 중복/유실 창 존재).<br>
+        <b>manual commit</b>: 처리 성공 후 커밋 → at-least-once 보장.
+      </div>
+    </div>
+    <div>
+      <strong>중복 vs 유실은 커밋 시점이 결정</strong>
+      <div class="al al-w" style="margin-top:8px">
+        처리 <u>전</u> 커밋 → 장애 시 <b>유실</b>(at-most-once).<br>
+        처리 <u>후</u> 커밋 → 장애 시 <b>재처리</b>(at-least-once, 멱등 처리 필요).<br>
+        static membership(<code>group.instance.id</code>)으로 재시작 리밸런싱 회피 가능.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ 9. CONTROLLER / KRaft ══ -->
+<section id="controller" class="card">
+  <span class="chip cp">Controller</span>
+  <div class="card-title">메타데이터 관리 — KRaft vs ZooKeeper</div>
+  <div class="card-desc">"어느 파티션의 Leader가 누구인지, ISR은 무엇인지" 같은 <strong>클러스터 메타데이터</strong>를 누가 관리하느냐의 문제. 과거엔 외부 ZooKeeper, 지금은 카프카 내장 <strong>KRaft</strong>(Raft 합의)입니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="300" fill="#f8fafc" rx="10"/>
+
+      <!-- ZK -->
+      <text x="175" y="30" text-anchor="middle" font-size="12" font-weight="bold" fill="#991b1b">과거: ZooKeeper 의존</text>
+      <rect x="60" y="42" width="230" height="60" rx="8" fill="#fef2f2" stroke="#ef4444"/><text x="175" y="66" text-anchor="middle" font-size="10" font-weight="bold" fill="#991b1b">ZooKeeper 앙상블 (별도 클러스터)</text><text x="175" y="84" text-anchor="middle" font-size="8.5" fill="#dc2626">메타데이터·컨트롤러 선출 저장</text>
+      <rect x="60" y="120" width="70" height="44" rx="6" fill="#fff" stroke="#94a3b8"/><text x="95" y="140" text-anchor="middle" font-size="8.5" fill="#334155">Broker1</text><text x="95" y="154" text-anchor="middle" font-size="7.5" fill="#ef4444">(Controller)</text>
+      <rect x="140" y="120" width="70" height="44" rx="6" fill="#fff" stroke="#94a3b8"/><text x="175" y="145" text-anchor="middle" font-size="8.5" fill="#334155">Broker2</text>
+      <rect x="220" y="120" width="70" height="44" rx="6" fill="#fff" stroke="#94a3b8"/><text x="255" y="145" text-anchor="middle" font-size="8.5" fill="#334155">Broker3</text>
+      <line x1="95" y1="120" x2="120" y2="102" stroke="#ef4444" stroke-width="1.3" marker-end="url(#a-r)"/>
+      <line x1="175" y1="120" x2="175" y2="102" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a-g)"/>
+      <line x1="255" y1="120" x2="230" y2="102" stroke="#94a3b8" stroke-width="1.3" marker-end="url(#a-g)"/>
+      <text x="175" y="188" text-anchor="middle" font-size="8.5" fill="#991b1b">단점: 운영할 시스템 2개 · 메타데이터 규모 한계 · 장애복구 느림</text>
+
+      <!-- KRaft -->
+      <text x="525" y="30" text-anchor="middle" font-size="12" font-weight="bold" fill="#166534">현재: KRaft (내장, ZK 제거)</text>
+      <rect x="410" y="42" width="230" height="122" rx="8" fill="#f0fdf4" stroke="#22c55e"/>
+      <text x="525" y="60" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">Controller Quorum (Raft)</text>
+      <rect x="422" y="70" width="66" height="40" rx="6" fill="#dcfce7" stroke="#16a34a"/><text x="455" y="88" text-anchor="middle" font-size="8" fill="#166534">Ctrl 1</text><text x="455" y="101" text-anchor="middle" font-size="7.5" fill="#16a34a">Leader</text>
+      <rect x="492" y="70" width="66" height="40" rx="6" fill="#fff" stroke="#22c55e"/><text x="525" y="92" text-anchor="middle" font-size="8" fill="#166534">Ctrl 2</text>
+      <rect x="562" y="70" width="66" height="40" rx="6" fill="#fff" stroke="#22c55e"/><text x="595" y="92" text-anchor="middle" font-size="8" fill="#166534">Ctrl 3</text>
+      <rect x="422" y="120" width="206" height="34" rx="5" fill="#bbf7d0"/><text x="525" y="141" text-anchor="middle" font-size="8.5" fill="#166534" font-weight="bold">__cluster_metadata (복제 로그)</text>
+      <text x="525" y="180" text-anchor="middle" font-size="8.5" fill="#166534">메타데이터도 "로그"로 관리 → 카프카가 잘하는 방식 그대로</text>
+
+      <text x="350" y="212" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="bold">KRaft 장점</text>
+      <text x="350" y="230" text-anchor="middle" font-size="8.5" fill="#475569">① 외부 의존성 제거(운영 단순) &nbsp; ② 수백만 파티션까지 확장 &nbsp; ③ 컨트롤러 장애복구가 훨씬 빠름</text>
+      <text x="350" y="248" text-anchor="middle" font-size="8.5" fill="#475569">Broker는 메타데이터 로그를 구독해 변경을 반영 → 메타데이터 전파가 빠르고 일관적</text>
+      <text x="350" y="272" text-anchor="middle" font-size="8.5" fill="#94a3b8" font-style="italic">Kafka 3.3부터 프로덕션 지원, 이후 버전에서 ZooKeeper 모드는 제거 수순</text>
+    </svg>
+    <div class="sc">KRaft는 메타데이터마저 복제 로그로 관리 — 외부 ZooKeeper 없이 확장성·복구속도 개선</div>
+  </div>
+</section>
+
+<!-- ══ 10. RETENTION / COMPACTION ══ -->
+<section id="retention" class="card">
+  <span class="chip co">Retention</span>
+  <div class="card-title">보존 정책 &amp; 로그 컴팩션</div>
+  <div class="card-desc">오래된 데이터를 정리하는 두 방식: <strong>delete</strong>(시간/크기 초과분 삭제) vs <strong>compact</strong>(키별 <em>최신값</em>만 남김).</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 250" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="250" fill="#f8fafc" rx="10"/>
+      <text x="350" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">Log Compaction — 키별 최신 상태만 유지</text>
+
+      <!-- before -->
+      <text x="180" y="52" text-anchor="middle" font-size="10" font-weight="bold" fill="#92400e">컴팩션 전 (모든 변경 이력)</text>
+      <g font-size="8.5">
+        <rect x="40" y="64" width="56" height="40" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="68" y="82" text-anchor="middle" fill="#92400e">A=1</text><text x="68" y="96" text-anchor="middle" fill="#94a3b8">off0</text>
+        <rect x="98" y="64" width="56" height="40" rx="4" fill="#fef3c7" stroke="#f59e0b"/><text x="126" y="82" text-anchor="middle" fill="#92400e">B=1</text><text x="126" y="96" text-anchor="middle" fill="#94a3b8">off1</text>
+        <rect x="156" y="64" width="56" height="40" rx="4" fill="#fde68a" stroke="#f59e0b"/><text x="184" y="82" text-anchor="middle" fill="#92400e">A=2</text><text x="184" y="96" text-anchor="middle" fill="#94a3b8">off2</text>
+        <rect x="214" y="64" width="56" height="40" rx="4" fill="#fee2e2" stroke="#ef4444"/><text x="242" y="82" text-anchor="middle" fill="#991b1b">B=null</text><text x="242" y="96" text-anchor="middle" fill="#94a3b8">off3</text>
+        <rect x="272" y="64" width="56" height="40" rx="4" fill="#fde68a" stroke="#f59e0b"/><text x="300" y="82" text-anchor="middle" fill="#92400e">A=3</text><text x="300" y="96" text-anchor="middle" fill="#94a3b8">off4</text>
+      </g>
+      <text x="242" y="120" text-anchor="middle" font-size="8" fill="#991b1b">B=null = tombstone(삭제 표시)</text>
+
+      <line x1="350" y1="84" x2="390" y2="84" stroke="#4338ca" stroke-width="2" marker-end="url(#a-i)"/>
+      <text x="370" y="76" text-anchor="middle" font-size="8" fill="#4338ca">compact</text>
+
+      <!-- after -->
+      <text x="520" y="52" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">컴팩션 후 (키별 최신만)</text>
+      <g font-size="8.5">
+        <rect x="440" y="64" width="70" height="40" rx="4" fill="#dcfce7" stroke="#16a34a"/><text x="475" y="82" text-anchor="middle" fill="#166534">A=3</text><text x="475" y="96" text-anchor="middle" fill="#94a3b8">off4</text>
+      </g>
+      <text x="600" y="88" font-size="8.5" fill="#475569">B는 tombstone으로</text>
+      <text x="600" y="100" font-size="8.5" fill="#475569">삭제됨(→ 제거)</text>
+
+      <text x="350" y="150" text-anchor="middle" font-size="9" fill="#4338ca" font-weight="bold">→ offset은 유지(4번 그대로), 오래된 중복 키만 제거. 최신 offset은 항상 보존</text>
+
+      <rect x="60" y="168" width="580" height="66" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="80" y="188" font-size="9" fill="#3730a3" font-weight="bold">cleanup.policy=delete</text>
+      <text x="80" y="204" font-size="8.5" fill="#475569">시간(retention.ms)·크기(retention.bytes) 초과한 <b>세그먼트 통째 삭제</b>. 일반 스트림 데이터용.</text>
+      <text x="80" y="224" font-size="8.5" fill="#475569">예: 진동 원시데이터 3일 보존 후 삭제</text>
+      <text x="400" y="188" font-size="9" fill="#166534" font-weight="bold">cleanup.policy=compact</text>
+      <text x="400" y="204" font-size="8.5" fill="#475569">키별 최신값 유지 → <b>"현재 상태" 저장소</b>. changelog·설정·KTable용.</text>
+      <text x="400" y="224" font-size="8.5" fill="#475569">예: 설비별 최신 설정, 컨슈머 오프셋 토픽</text>
+    </svg>
+    <div class="sc">delete는 오래된 것 삭제, compact는 키별 최신값만 보존 — __consumer_offsets도 compact 토픽</div>
+  </div>
+</section>
+
+<!-- ══ 11. DELIVERY SEMANTICS ══ -->
+<section id="delivery" class="card">
+  <span class="chip cg">Delivery</span>
+  <div class="card-title">전달 보장 (Delivery Semantics)</div>
+  <div class="card-desc">내부 메커니즘(멱등 producer·offset 커밋 시점·트랜잭션)이 조합되어 세 가지 보장 수준을 만듭니다.</div>
+
+  <div class="tw">
+    <table>
+      <tr><th>수준</th><th>의미</th><th>구성 방법</th><th>비고</th></tr>
+      <tr><td class="tb">At most once</td><td>유실 가능, 중복 없음</td><td>acks=0/1, 처리 전 offset 커밋</td><td>속도 우선(고주파 센서)</td></tr>
+      <tr><td class="ty">At least once</td><td>유실 없음, 중복 가능</td><td>acks=all, 처리 <b>후</b> 커밋</td><td>가장 일반적, 멱등 처리 전제</td></tr>
+      <tr><td class="tg">Exactly once</td><td>유실·중복 없음</td><td>멱등 producer + <b>트랜잭션</b>(read-process-write)</td><td>EOS. Kafka Streams 기본</td></tr>
+    </table>
+  </div>
+
+  <div class="al al-i"><strong>Exactly-once(EOS) 핵심:</strong> ① 멱등 producer(PID+seq)로 재시도 중복 제거 → ② 트랜잭션으로 "여러 파티션 쓰기 + offset 커밋"을 <strong>원자적으로</strong> 묶음 → ③ 컨슈머는 <code>isolation.level=read_committed</code>로 커밋된 트랜잭션만 읽음. 이 조합이 "정확히 한 번" 파이프라인을 만듭니다.</div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">⚙️ 유실 없는 운영 설정 예시 (server / producer)</div>
+    <pre><code># Broker/Topic
+replication.factor = 3
+min.insync.replicas = 2          # ISR 2 미만이면 acks=all 쓰기 거부
+unclean.leader.election.enable = false
+
+# Producer
+acks = all
+enable.idempotence = true        # PID+seq → 중복 제거·순서 보장
+max.in.flight.requests.per.connection = 5
+retries = 2147483647             # 사실상 무한 재시도(멱등이라 안전)
+
+# Consumer
+enable.auto.commit = false       # 처리 후 수동 커밋 → at-least-once
+isolation.level = read_committed # 트랜잭션 EOS 시</code></pre>
+  </div>
+</section>
+
+<!-- ══ 12. Q&A ══ -->
+<section id="qa" class="card">
+  <span class="chip cs">Interview</span>
+  <div class="card-title">면접 Q&amp;A</div>
+
+  <div class="qa-item">
+    <div class="qq">Q. Kafka가 디스크를 쓰는데도 빠른 이유는?</div>
+    <div class="qa">append-only <b>순차 I/O</b>(랜덤 X) + OS <b>페이지 캐시</b> 활용 + <b>zero-copy(sendfile)</b> + <b>배치·압축</b>. 즉 "디스크가 느린 게 아니라 랜덤 접근이 느린 것"을 순차 로그 구조로 회피.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. High Watermark와 LEO의 차이는?</div>
+    <div class="qa">LEO는 복제본이 마지막으로 쓴 다음 offset(로컬 끝). HW는 <b>ISR 전부가 복제 완료</b>한 offset. 컨슈머는 HW까지만 읽음 → 복제 안 끝난 데이터가 노출되지 않아 Leader 장애 시에도 안전.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. 파티션 안에서만 순서가 보장되는 이유는?</div>
+    <div class="qa">offset은 파티션별로 매겨지고, 쓰기는 Leader의 로그 끝에 순차 append되기 때문. 토픽 전체 순서는 보장 안 됨 → 순서가 필요한 데이터는 같은 key로 같은 파티션에 보내야 함.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. acks=all이면 무조건 유실이 없나?</div>
+    <div class="qa">아니오. <code>min.insync.replicas</code>가 함께 있어야 함. ISR이 1개로 줄어든 상태에서 acks=all은 그 1개만 확인하므로, 그 브로커가 죽으면 유실. 그래서 replication.factor=3 + min.insync.replicas=2 조합을 씀.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. 컨슈머를 파티션 수보다 많이 두면?</div>
+    <div class="qa">초과 컨슈머는 <b>놀게 됨</b>(idle). 한 파티션은 그룹 내 한 컨슈머만 소비하므로 병렬성의 상한은 파티션 수. 확장 계획이 있으면 파티션을 넉넉히 잡아야 함.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. 리밸런싱이 왜 문제이고, 어떻게 줄이나?</div>
+    <div class="qa">eager 방식은 전원이 멈추고 재배정하는 stop-the-world라 지연 발생. <b>cooperative(incremental) 리밸런싱</b>으로 바뀌는 파티션만 넘기고, <b>static membership</b>(group.instance.id)으로 재시작 시 불필요한 리밸런싱을 회피.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. Log compaction은 언제 쓰나?</div>
+    <div class="qa">"현재 상태"만 필요할 때. 키별 최신값만 남기므로 changelog, 설비 최신 설정, KTable, <code>__consumer_offsets</code> 같은 상태 저장에 적합. 이력이 필요하면 delete 정책 + 긴 보존.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. KRaft가 ZooKeeper보다 나은 점은?</div>
+    <div class="qa">외부 시스템 의존 제거(운영 단순), 메타데이터를 복제 로그로 관리해 <b>수백만 파티션까지 확장</b>, 컨트롤러 장애복구가 훨씬 빠름. 메타데이터 전파도 로그 구독 방식이라 일관적.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. Exactly-once는 실제로 어떻게 달성되나?</div>
+    <div class="qa">멱등 producer(PID+시퀀스)로 재전송 중복 제거 + 트랜잭션으로 "메시지 쓰기 + offset 커밋"을 원자적으로 묶음 + 컨슈머 read_committed. 이 3요소 조합. Kafka Streams는 이를 기본 제공(processing.guarantee=exactly_once_v2).</div>
+  </div>
+</section>
+
+<p style="text-align:center;color:#94a3b8;font-size:.8rem;margin:20px 0 40px">Kafka 내부 구조 가이드 · 함께 보기: kafka.md(아키텍처·PdM 연계·구현) · mqtt_guide.html</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<svg viewBox="0 0 880 260" xmlns="http://www.w3.org/2000/svg" role="img" font-family="sans-serif">
+  <title>Non-IID의 대표 유형</title>
+  <desc>라벨 편중, 피처 분포 차이, 데이터 양 불균형, 시간에 따른 분포 드리프트의 네 가지 Non-IID 유형.</desc>
+  <rect x="0" y="0" width="880" height="260" rx="14" fill="#faf9f6"/>
+  <line x1="225" y1="40" x2="225" y2="215" stroke="#e0dbd2" stroke-width="1.5"/>
+  <line x1="445" y1="40" x2="445" y2="215" stroke="#e0dbd2" stroke-width="1.5"/>
+  <line x1="665" y1="40" x2="665" y2="215" stroke="#e0dbd2" stroke-width="1.5"/>
+
+  <!-- 1. Label skew -->
+  <text x="115" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">Label Skew</text>
+  <line x1="40" y1="175" x2="195" y2="175" stroke="#8a8377" stroke-width="1.2"/>
+  <rect x="55" y="115" width="16" height="60" fill="#4a7c59"/>
+  <rect x="75" y="163" width="16" height="12" fill="#c2683f"/>
+  <text x="73" y="192" text-anchor="middle" font-size="10.5" fill="#6b655c">클라이언트 A</text>
+  <rect x="125" y="163" width="16" height="12" fill="#4a7c59"/>
+  <rect x="145" y="115" width="16" height="60" fill="#c2683f"/>
+  <text x="143" y="192" text-anchor="middle" font-size="10.5" fill="#6b655c">클라이언트 B</text>
+  <text x="115" y="230" text-anchor="middle" font-size="10.5" fill="#6b655c">클래스(고장 유형) 분포가 다름</text>
+
+  <!-- 2. Feature skew -->
+  <text x="335" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">Feature Skew</text>
+  <line x1="255" y1="175" x2="415" y2="175" stroke="#8a8377" stroke-width="1.2"/>
+  <path d="M258,175 C285,80 315,80 342,175" fill="none" stroke="#4a7c59" stroke-width="2"/>
+  <path d="M322,175 C349,95 379,95 406,175" fill="none" stroke="#c2683f" stroke-width="2"/>
+  <text x="335" y="230" text-anchor="middle" font-size="10.5" fill="#6b655c">같은 클래스라도 입력 분포가 다름</text>
+
+  <!-- 3. Quantity skew -->
+  <text x="555" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">Quantity Skew</text>
+  <line x1="480" y1="175" x2="630" y2="175" stroke="#8a8377" stroke-width="1.2"/>
+  <rect x="500" y="75" width="38" height="100" rx="4" fill="#4a7c59"/>
+  <text x="519" y="192" text-anchor="middle" font-size="10.5" fill="#6b655c">클라이언트 A</text>
+  <rect x="570" y="151" width="38" height="24" rx="4" fill="#c2683f"/>
+  <text x="589" y="192" text-anchor="middle" font-size="10.5" fill="#6b655c">클라이언트 B</text>
+  <text x="555" y="230" text-anchor="middle" font-size="10.5" fill="#6b655c">보유 데이터 양의 불균형</text>
+
+  <!-- 4. Temporal drift -->
+  <text x="770" y="30" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">Temporal Drift</text>
+  <line x1="695" y1="175" x2="855" y2="175" stroke="#8a8377" stroke-width="1.2"/>
+  <path d="M698,175 C723,85 751,85 776,175" fill="none" stroke="#4a7c59" stroke-width="2"/>
+  <path d="M760,175 C785,95 813,95 838,175" fill="none" stroke="#c2683f" stroke-width="2" stroke-dasharray="5 3"/>
+  <line x1="742" y1="115" x2="792" y2="115" stroke="#6b655c" stroke-width="1.4"/>
+  <path d="M792,115 L785,111 L785,119 z" fill="#6b655c"/>
+  <text x="767" y="107" text-anchor="middle" font-size="10.5" fill="#6b655c">t → t′</text>
+  <text x="770" y="230" text-anchor="middle" font-size="10.5" fill="#6b655c">시간이 지나며 분포가 흘러감</text>
+
+  <text x="440" y="252" text-anchor="middle" font-size="11" fill="#6b655c">실제 데이터에서는 이 유형들이 섞여서 나타나는 경우가 많다</text>
+</svg>

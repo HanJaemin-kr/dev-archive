@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🦷 치의학 올인원 학습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Fraunces:opsz,ital,wght@9..144,1,600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--ink:#1F4938;--ink-deep:#0F2D22;--rust:#C2410C;--paper:#FDFBF5;--paper-warm:#F9F3E6;--bg:#F5F1E8;--green:#16A34A;--red:#DC2626;--yellow:#F5D060;--blue:#2563EB}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--ink-deep);min-height:100vh}
+#app{max-width:560px;margin:0 auto;padding:2rem 1.25rem 4rem}
+.serif{font-family:'Noto Serif KR',serif}
+.display{font-family:'Fraunces',serif;font-style:italic}
+.btn{border:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;font-size:.875rem;font-weight:500;border-radius:1rem;padding:.75rem 1.25rem;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;transition:all .2s}
+.btn-primary{background:var(--ink);color:var(--paper-warm)}.btn-primary:hover{background:var(--ink-deep);transform:translateY(-1px)}.btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}.btn-ghost:hover{background:var(--ink);color:var(--paper-warm)}.btn-ghost:disabled{opacity:.3}
+.btn-full{width:100%;padding:1rem 1.25rem;border-radius:1.25rem;font-size:1rem}
+.btn-serif{font-family:'Noto Serif KR',serif;font-weight:700}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid rgba(31,73,56,.15)}
+.logo{display:flex;align-items:center;gap:.625rem}
+.logo-icon{width:2.25rem;height:2.25rem;background:var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--paper-warm);font-size:1rem}
+.logo-label{font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);opacity:.6;font-weight:500}
+.logo-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:.95rem;color:var(--ink-deep)}
+.progress-wrap{margin-bottom:1.5rem}.progress-meta{display:flex;justify-content:space-between;font-size:.75rem;color:rgba(31,73,56,.7);margin-bottom:.5rem}.progress-track{background:rgba(31,73,56,.1);border-radius:999px;height:6px;overflow:hidden}.progress-fill{background:var(--ink);height:100%;border-radius:999px;transition:width .5s}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:.625rem;margin-bottom:2rem}
+.mode-card{background:var(--paper);border:1.5px solid rgba(31,73,56,.12);border-radius:1.25rem;padding:1rem;cursor:pointer;transition:all .25s;text-align:left;font-family:'Noto Sans KR',sans-serif}.mode-card:hover{border-color:var(--ink);transform:translateY(-2px);box-shadow:0 12px 24px -12px rgba(31,73,56,.2)}.mode-card.active{background:var(--ink);color:var(--paper-warm);border-color:var(--ink)}
+.mode-icon{font-size:1.25rem;margin-bottom:.5rem}.mode-name{font-family:'Noto Serif KR',serif;font-weight:700;font-size:.875rem;margin-bottom:.2rem}.mode-desc{font-size:.7rem;opacity:.7;line-height:1.4}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:2rem}
+.chip{border-radius:999px;padding:.5rem .875rem;font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;user-select:none;display:flex;align-items:center;gap:.4rem}.chip.active{background:var(--ink);color:var(--paper-warm);border:1.5px solid var(--ink)}.chip:not(.active){background:var(--paper);color:var(--ink);border:1.5px solid rgba(31,73,56,.2)}.chip-count{opacity:.6;font-size:.7rem}
+.summary-row{background:var(--paper-warm);border-radius:1.25rem;padding:1rem 1.25rem;display:flex;justify-content:space-between;margin-bottom:1rem}.s-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.15em;color:rgba(31,73,56,.6);margin-bottom:.2rem}.s-val{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.5rem;color:var(--ink-deep)}.s-unit{font-size:.75rem;font-weight:400;margin-left:.2rem}
+.tip-banner{background:var(--paper);border-radius:1.25rem;padding:1rem;margin-bottom:2rem;display:flex;gap:.75rem;align-items:flex-start;position:relative;box-shadow:0 1px 0 rgba(31,73,56,.08),0 8px 24px -12px rgba(31,73,56,.15)}.tip-tag{position:absolute;top:.75rem;right:.75rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(31,73,56,.4);font-weight:500}.tip-text{font-size:.8rem;line-height:1.6;color:var(--ink-deep)}
+.q-card{background:var(--paper);border-radius:1.75rem;padding:1.75rem;margin-bottom:1.25rem;box-shadow:0 1px 0 rgba(31,73,56,.08),0 8px 24px -12px rgba(31,73,56,.15);position:relative}.q-badge{position:absolute;top:.875rem;right:.875rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(31,73,56,.4);font-weight:500}.q-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;color:rgba(31,73,56,.6);margin-bottom:.75rem}
+.q-en{font-family:'Fraunces',serif;font-style:italic;font-size:2.5rem;font-weight:600;line-height:1.15;color:var(--ink-deep)}.q-ko{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.5rem;line-height:1.4;color:var(--ink-deep)}.q-desc{font-family:'Noto Serif KR',serif;font-weight:600;font-size:1rem;line-height:1.75;color:var(--ink-deep)}
+.options{display:flex;flex-direction:column;gap:.625rem;margin-bottom:1.5rem}
+.opt{background:var(--paper);border:1.5px solid rgba(31,73,56,.15);border-radius:1.25rem;padding:1rem 1.25rem;cursor:pointer;display:flex;align-items:center;gap:.875rem;transition:all .2s;text-align:left;font-family:'Noto Sans KR',sans-serif;font-size:.875rem;font-weight:500;color:var(--ink-deep);width:100%}.opt:hover:not([disabled]){border-color:var(--ink);transform:translateX(2px)}.opt[disabled]{cursor:not-allowed}.opt.correct{background:#F0FDF4;border-color:var(--green);color:#14532D}.opt.wrong{background:#FEF2F2;border-color:var(--red);color:#7F1D1D}.opt.dimmed{opacity:.4}
+.badge{width:1.75rem;height:1.75rem;border-radius:50%;background:rgba(31,73,56,.08);color:var(--ink);font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}.badge.g{background:var(--green);color:#fff}.badge.r{background:var(--red);color:#fff}
+.feedback{border-radius:1.25rem;padding:1rem 1.25rem;margin-bottom:.75rem;display:flex;gap:.875rem;align-items:flex-start}.feedback.ok{background:#F0FDF4}.feedback.fail{background:#FEF3E8}.fb-icon{width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.875rem}.fb-icon.g{background:var(--green);color:#fff}.fb-icon.r{background:var(--rust);color:#fff}.fb-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:.875rem;margin-bottom:.25rem}.fb-title.g{color:#14532D}.fb-title.r{color:#7C2D12}.fb-body{font-size:.8rem;line-height:1.5}.fb-body.g{color:#166534}.fb-body.r{color:#9A3412}
+.memo-box{background:#FFFBEB;border:1.5px solid var(--yellow);border-radius:1rem;padding:.875rem 1rem;margin-bottom:1rem;display:flex;gap:.75rem;align-items:flex-start}.memo-tag{background:var(--yellow);color:#78550B;font-size:.65rem;font-weight:700;padding:.2rem .5rem;border-radius:.375rem;flex-shrink:0;white-space:nowrap;margin-top:.1rem}.memo-text{font-size:.85rem;line-height:1.6;color:#78550B}
+.type-wrap{margin-bottom:1.5rem}.type-input{width:100%;padding:1rem 1.25rem;border:2px solid rgba(31,73,56,.2);border-radius:1.25rem;font-family:'Noto Sans KR',sans-serif;font-size:1.125rem;font-weight:500;background:var(--paper);color:var(--ink-deep);outline:none;transition:border-color .2s}.type-input:focus{border-color:var(--ink)}.type-input.correct-input{border-color:var(--green);background:#F0FDF4}.type-input.wrong-input{border-color:var(--red);background:#FEF2F2}.type-hint{font-size:.75rem;color:rgba(31,73,56,.5);margin-top:.5rem;padding-left:.25rem}.type-row{display:flex;gap:.5rem;margin-top:.75rem}
+.flash-wrap{perspective:1400px;margin-bottom:1.5rem}.flash-inner{position:relative;min-height:280px;transform-style:preserve-3d;transition:transform .6s cubic-bezier(.4,0,.2,1);cursor:pointer}.flash-inner.flipped{transform:rotateY(180deg)}.flash-face{backface-visibility:hidden;-webkit-backface-visibility:hidden;position:absolute;inset:0;border-radius:1.75rem;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}.ff{background:var(--paper);box-shadow:0 2px 0 rgba(31,73,56,.1),0 20px 40px -16px rgba(31,73,56,.2)}.fb-card{background:var(--paper-warm);transform:rotateY(180deg);box-shadow:0 2px 0 rgba(31,73,56,.1),0 20px 40px -16px rgba(31,73,56,.2)}.flash-tag{position:absolute;top:.875rem;right:.875rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(31,73,56,.4);font-weight:500}.flash-hint{font-size:.7rem;color:rgba(31,73,56,.4);margin-top:1rem}.flash-sub{font-size:.8rem;opacity:.5;margin-top:.5rem}.flash-lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.2em;color:rgba(31,73,56,.5);margin-bottom:.875rem}.flash-en{font-family:'Fraunces',serif;font-style:italic;font-size:2.25rem;font-weight:600;line-height:1.2;color:var(--ink-deep);word-break:break-word}.flash-ko{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.75rem;line-height:1.4;color:var(--ink-deep)}.flash-nav{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem}
+.result-hero{background:var(--paper);border-radius:1.75rem;padding:2rem;text-align:center;margin-bottom:1.5rem;position:relative;box-shadow:0 2px 0 rgba(31,73,56,.1),0 20px 40px -16px rgba(31,73,56,.2)}.result-badge{position:absolute;top:.875rem;right:.875rem;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:rgba(31,73,56,.4);font-weight:500}.result-emoji{font-size:2.5rem;margin-bottom:.75rem}.result-score{font-family:'Fraunces',serif;font-style:italic;font-size:4rem;font-weight:600;line-height:1;color:var(--ink-deep)}.result-sub{font-size:.875rem;color:rgba(31,73,56,.6);margin:.5rem 0 .875rem}.result-msg{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.125rem}
+.wrong-list{background:var(--paper-warm);border-radius:1.25rem;padding:1.25rem;margin-bottom:1.25rem}.wrong-hdr{font-family:'Noto Serif KR',serif;font-weight:700;font-size:.9rem;color:var(--ink-deep);margin-bottom:.875rem}.wrong-items{max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:.5rem}.wrong-item{background:var(--paper);border-radius:.875rem;padding:.75rem 1rem}.wrong-en{font-size:.875rem;font-weight:600;color:var(--ink-deep)}.wrong-ko{font-size:.75rem;color:rgba(31,73,56,.7);margin-top:.15rem}.wrong-memo{font-size:.7rem;color:#78550B;margin-top:.375rem;background:#FFFBEB;padding:.375rem .625rem;border-radius:.5rem;display:inline-block}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem}.section-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.1rem;color:var(--ink-deep)}.section-sub{font-size:.75rem;color:rgba(31,73,56,.5)}
+.link-row{display:flex;gap:.875rem}.link-btn{font-size:.75rem;color:var(--ink);text-decoration:underline;background:none;border:none;cursor:pointer;font-family:inherit}
+.hero-eyebrow{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--rust);margin-bottom:.5rem}.hero-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:2rem;line-height:1.25;color:var(--ink-deep);margin-bottom:.5rem}.hero-sub{font-size:.875rem;line-height:1.6;color:rgba(31,73,56,.7);margin-bottom:2rem}
+.footer{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid rgba(31,73,56,.1);text-align:center;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(31,73,56,.35)}
+.btn-stack{display:flex;flex-direction:column;gap:.625rem}
+.menu-card{background:var(--paper);border:2px solid rgba(31,73,56,.1);border-radius:1.5rem;padding:1.75rem;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}.menu-card:hover{border-color:var(--ink);transform:translateY(-3px);box-shadow:0 16px 32px -16px rgba(31,73,56,.25)}.menu-num{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:rgba(31,73,56,.4);margin-bottom:.5rem}.menu-title{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.25rem;margin-bottom:.375rem;color:var(--ink-deep)}.menu-sub{font-size:.8rem;color:rgba(31,73,56,.6);line-height:1.5}.menu-emoji{font-size:2.5rem;margin-bottom:.75rem}
+.study-card{background:var(--paper);border-radius:1.5rem;padding:1.5rem;min-height:200px;box-shadow:0 2px 0 rgba(31,73,56,.1),0 16px 32px -16px rgba(31,73,56,.2);white-space:pre-line;cursor:pointer;margin-bottom:1.5rem}
+.study-front{font-family:'Noto Serif KR',serif;font-weight:700;font-size:1.25rem;color:var(--ink-deep);line-height:1.5;display:flex;align-items:center;justify-content:center;text-align:center;min-height:180px}
+.study-back{font-size:.9rem;line-height:1.8;color:var(--ink-deep)}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.fade-in{animation:fadeIn .3s ease-out}.shake{animation:shake .3s}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:1rem;color:rgba(31,73,56,.5);font-size:.875rem}
+.loading-spinner{width:2rem;height:2rem;border:3px solid rgba(31,73,56,.15);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"><div class="loading"><div class="loading-spinner"></div><span>데이터 불러오는 중...</span></div></div>
+<script>
+// ── Data (loaded from SQLite via API) ─────────────────────
+let TERMS=[], CHAPTERS=[], MORPH_STUDY=[], MORPH_QUIZ=[], MORPH_CH=[];
+const TIPS=["접두사·접미사(1장)를 먼저 외우면 나머지 용어가 쉬워져요.","-itis 염증 / -ectomy 절제술 / -tomy 절단술.","\'설명→용어 타이핑\' 모드가 진짜 실력 테스트!","Mesial=정중선 가까운 쪽, Distal=정중선 먼 쪽.","치주 조직 4가지: 치은·치조골·치주인대·백악질."];
+
+async function loadData(){
+  const d=await fetch('/api/dental/all').then(r=>r.json());
+  TERMS=d.terms;
+  CHAPTERS=d.chapters;
+  MORPH_STUDY=d.morphStudy;
+  MORPH_QUIZ=d.morphQuiz;
+  MORPH_CH=d.morphChapters;
+  render();
+}
+
+// ── STATE ──
+const S={
+  section:'main',
+  screen:'home',mode:'en-ko',chapters:[7],queue:[],idx:0,opts:[],qtype:'en-ko',answered:null,score:{ok:0,total:0},wrong:[],flipped:false,tip:Math.floor(Math.random()*5),typedVal:'',
+  mScreen:'home',
+  mChapters:[1,2,3,4,5,6,7,8],mCards:[],mIdx:0,mFlipped:false,
+  mQuiz:[],mQIdx:0,mQAns:null,mQScore:{ok:0,total:0},mQWrong:[]
+};
+
+// ── TERMS HELPERS ──
+function ftFilter(){let t=TERMS.filter(t=>S.chapters.includes(t.ch));if(S.mode==='desc-mc'||S.mode==='desc-type')t=t.filter(t=>t.desc);return t}
+function shuffle(a){return[...a].sort(()=>Math.random()-.5)}
+function makeOpts(term,qt){const f=(qt==='ko-en')?'en':'ko';const c=term[f];const pool=TERMS.filter(t=>t.id!==term.id&&t[f]!==c);return shuffle([c,...shuffle(pool).slice(0,3).map(t=>t[f])])}
+function pickQT(term){if(S.mode==='mixed'){const p=['en-ko','ko-en'];if(term.desc)p.push('desc-mc');return p[Math.floor(Math.random()*p.length)]}return S.mode}
+function startSession(){const terms=ftFilter();if(terms.length<4)return;S.queue=shuffle(terms);S.idx=0;S.score={ok:0,total:0};S.wrong=[];S.answered=null;S.flipped=false;S.typedVal='';if(S.mode==='flashcard'){S.screen='flash';render();return}S.qtype=pickQT(S.queue[0]);if(S.qtype!=='desc-type')S.opts=makeOpts(S.queue[0],S.qtype);S.screen='quiz';render()}
+function checkTyped(input,term){const clean=input.trim();if(!clean)return false;return term.ko.split(/[,，]/).map(p=>p.trim()).some(p=>p===clean)}
+function answer(choice){if(S.answered)return;const term=S.queue[S.idx];const correct=(S.qtype==='ko-en')?term.en:term.ko;S.answered={choice,correct,isOk:choice===correct};S.score.total++;if(choice===correct)S.score.ok++;else S.wrong.push(term);render()}
+function answerTyped(){if(S.answered)return;const term=S.queue[S.idx];const isOk=checkTyped(S.typedVal,term);S.answered={choice:S.typedVal,correct:term.ko,isOk};S.score.total++;if(isOk)S.score.ok++;else S.wrong.push(term);render()}
+function nextQ(){if(S.idx+1>=S.queue.length){S.screen='results';render();return}S.idx++;S.answered=null;S.typedVal='';S.qtype=pickQT(S.queue[S.idx]);if(S.qtype!=='desc-type')S.opts=makeOpts(S.queue[S.idx],S.qtype);render()}
+function nextFlash(){if(S.idx+1>=S.queue.length){S.screen='results';render();return}S.idx++;S.flipped=false;render()}
+function prevFlash(){if(S.idx===0)return;S.idx--;S.flipped=false;render()}
+function toggleFlip(){S.flipped=!S.flipped;document.querySelector('.flash-inner')?.classList.toggle('flipped',S.flipped)}
+function retryWrong(){if(!S.wrong.length)return;S.queue=[...S.wrong];S.idx=0;S.score={ok:0,total:0};S.wrong=[];S.answered=null;S.typedVal='';S.qtype=pickQT(S.queue[0]);if(S.qtype!=='desc-type')S.opts=makeOpts(S.queue[0],S.qtype);S.screen='quiz';render()}
+
+// ── MORPH HELPERS ──
+function startMorphStudy(){const chs=S.mChapters;let cards=[];MORPH_STUDY.filter(c=>chs.includes(c.id)).forEach(ch=>{ch.cards.forEach(card=>{cards.push({...card,ch:ch.id,chTitle:ch.title})})});S.mCards=cards;S.mIdx=0;S.mFlipped=false;S.mScreen='study';render()}
+function startMorphQuiz(){const qs=MORPH_QUIZ.filter(q=>S.mChapters.includes(q.ch));if(qs.length<4)return;S.mQuiz=shuffle(qs);S.mQIdx=0;S.mQAns=null;S.mQScore={ok:0,total:0};S.mQWrong=[];S.mScreen='quiz';render()}
+function mAnswer(idx){if(S.mQAns!==null)return;const q=S.mQuiz[S.mQIdx];const isOk=idx===q.a;S.mQAns={idx,isOk};S.mQScore.total++;if(isOk)S.mQScore.ok++;else S.mQWrong.push(q);render()}
+function mNextQ(){if(S.mQIdx+1>=S.mQuiz.length){S.mScreen='results';render();return}S.mQIdx++;S.mQAns=null;render()}
+function mRetryWrong(){if(!S.mQWrong.length)return;S.mQuiz=[...S.mQWrong];S.mQIdx=0;S.mQAns=null;S.mQScore={ok:0,total:0};S.mQWrong=[];S.mScreen='quiz';render()}
+
+// ── RENDER ──
+const app=document.getElementById('app');
+function hdr(back,backAction){return`<header class="header"><div class="logo"><div class="logo-icon">🦷</div><div><div class="logo-label">Dental Study</div><div class="logo-title serif">치의학 올인원 학습</div></div></div>${back?`<button class="btn btn-ghost" style="padding:.5rem .875rem;border-radius:999px;font-size:.8rem" data-action="${backAction||'home'}">← 뒤로</button>`:''}</header>`}
+function memoHTML(term){if(!term.memo)return'';return`<div class="memo-box"><span class="memo-tag">💡 암기팁</span><span class="memo-text">${term.memo}</span></div>`}
+
+function renderMain(){return`${hdr(false)}
+<div class="fade-in">
+<p class="hero-eyebrow">· 2과목 · 올인원</p>
+<h1 class="hero-title">어떤 과목을 <span class="display">공부할까요?</span></h1>
+<p class="hero-sub">과목을 선택하면 학습 모드로 이동합니다.</p>
+<div style="display:flex;flex-direction:column;gap:1rem">
+<div class="menu-card" data-action="go-terms"><div class="menu-emoji">📚</div><div class="menu-num">Menu 1</div><div class="menu-title">치의학 용어</div><div class="menu-sub">94개 영어↔한글 용어 암기<br>객관식 · 타이핑 · 플래시카드 · 암기팁</div></div>
+<div class="menu-card" data-action="go-morph"><div class="menu-emoji">🔬</div><div class="menu-num">Menu 2</div><div class="menu-title">치아 형태학</div><div class="menu-sub">8개 챕터 개념 학습 + 45문제 퀴즈<br>치아 구조 · 표기법 · 절치 각론</div></div>
+</div>
+<div class="footer">— 둘 다 해야 시험 합격 —</div></div>`}
+
+function renderTermsHome(){
+const terms=ftFilter();
+const modes=[{id:'en-ko',ico:'🎯',name:'영어 → 한글',d:'단어 보고 뜻 맞추기'},{id:'ko-en',ico:'🧠',name:'한글 → 영어',d:'뜻 보고 단어 맞추기'},{id:'desc-mc',ico:'📖',name:'설명→용어 객관식',d:'설명 보고 4지선다'},{id:'desc-type',ico:'✍️',name:'설명→용어 타이핑',d:'설명 보고 직접 입력'},{id:'mixed',ico:'🔀',name:'섞어서',d:'랜덤으로 번갈아'},{id:'flashcard',ico:'🃏',name:'플래시카드',d:'뒤집으며 외우기'}];
+return`${hdr(true,'go-main')}<div class="fade-in">
+<h1 class="hero-title" style="font-size:1.5rem">📚 치의학 용어</h1>
+<p class="hero-sub" style="margin-bottom:1.5rem">${TERMS.length}개 용어 · ${CHAPTERS.length}개 챕터</p>
+<div class="tip-banner"><span class="tip-tag">TIP</span><span style="color:var(--rust)">✦</span><span class="tip-text">${TIPS[S.tip]}</span></div>
+<div class="section-header"><span class="section-title serif">학습 모드</span></div>
+<div class="mode-grid">${modes.map(m=>`<button class="mode-card${S.mode===m.id?' active':''}" data-action="mode" data-val="${m.id}"><div class="mode-icon">${m.ico}</div><div class="mode-name">${m.name}</div><div class="mode-desc">${m.d}</div></button>`).join('')}</div>
+<div class="section-header"><span class="section-title serif">출제 범위</span><div class="link-row"><button class="link-btn" data-action="all-ch">전체</button><button class="link-btn" data-action="none-ch">해제</button></div></div>
+<div class="chips">${CHAPTERS.map(c=>{const cnt=TERMS.filter(t=>t.ch===c.id).length;return`<div class="chip${S.chapters.includes(c.id)?' active':''}" data-action="ch" data-val="${c.id}">${c.emoji} ${c.id}장·${c.short} <span class="chip-count">(${cnt})</span></div>`}).join('')}</div>
+<div class="summary-row"><div><div class="s-label">학습량</div><div class="s-val">${terms.length}<span class="s-unit">개</span></div></div><div style="text-align:right"><div class="s-label">예상</div><div class="s-val">~${Math.max(1,Math.round(terms.length*.3))}<span class="s-unit">분</span></div></div></div>
+<button class="btn btn-primary btn-full btn-serif" data-action="start"${terms.length<4?' disabled':''}>⚡ 시작하기 ›</button></div>`}
+
+function renderTermsQuiz(){
+const term=S.queue[S.idx];const qt=S.qtype;const isDesc=qt==='desc-mc'||qt==='desc-type';const isType=qt==='desc-type';const isKoEn=qt==='ko-en';
+const prompt=isDesc?term.desc:isKoEn?term.ko:term.en;const correct=isKoEn?term.en:term.ko;
+const label=isDesc?'다음 설명에 해당하는 용어는?':isKoEn?'다음 뜻에 해당하는 단어는?':'다음 단어의 뜻은?';
+const chap=CHAPTERS.find(c=>c.id===term.ch);
+let aa='';
+if(isType){aa=`<div class="type-wrap"><input id="type-input" class="type-input${S.answered?(S.answered.isOk?' correct-input':' wrong-input'):''}" type="text" placeholder="정답 입력..." value="${S.answered?S.typedVal:''}" ${S.answered?'disabled':''}><div class="type-hint">쉼표 답 중 하나만 맞으면 OK</div>${!S.answered?`<div class="type-row"><button class="btn btn-primary btn-full" data-action="submit-type">확인</button></div>`:''}</div>`}
+else{aa=`<div class="options">${S.opts.map((o,i)=>{let c='opt',b='badge',bi=String.fromCharCode(65+i);if(S.answered){if(o===correct){c+=' correct';b+=' g';bi='✓'}else if(o===S.answered.choice){c+=' wrong';b+=' r';bi='✕'}else c+=' dimmed'}const sh=S.answered&&o===S.answered.choice&&o!==correct;return`<button class="${c}${sh?' shake':''}" data-action="answer" data-val="${encodeURIComponent(o)}"${S.answered?' disabled':''}><span class="${b}">${bi}</span><span>${o}</span></button>`}).join('')}</div>`}
+const fb=S.answered?`<div class="feedback ${S.answered.isOk?'ok':'fail'} fade-in"><div class="fb-icon ${S.answered.isOk?'g':'r'}">${S.answered.isOk?'✓':'✕'}</div><div><div class="fb-title ${S.answered.isOk?'g':'r'}">${S.answered.isOk?'정답!':'오답!'}</div><div class="fb-body ${S.answered.isOk?'g':'r'}"><strong>${term.en}</strong> = ${term.ko}</div></div></div>${!S.answered.isOk?memoHTML(term):''}<button class="btn btn-primary btn-full btn-serif" data-action="next">${S.idx+1>=S.queue.length?'결과 보기':'다음'} ›</button>`:'';
+return`${hdr(true,'terms-home')}<div class="fade-in">
+<div class="progress-wrap"><div class="progress-meta"><span>${S.idx+1}/${S.queue.length}</span><span style="display:flex;gap:.5rem"><span style="color:var(--green)">✓${S.score.ok}</span><span style="color:var(--red)">✕${S.score.total-S.score.ok}</span></span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round((S.idx/S.queue.length)*100)}%"></div></div></div>
+<div class="q-card"><div class="q-badge">${chap?.short}</div><div class="q-label">${label}</div><div class="${isDesc?'q-desc':isKoEn?'q-ko':'q-en'}">${prompt}</div></div>${aa}${fb}</div>`}
+
+function renderTermsFlash(){
+const term=S.queue[S.idx];const chap=CHAPTERS.find(c=>c.id===term.ch);
+return`${hdr(true,'terms-home')}<div class="fade-in">
+<div class="progress-wrap"><div class="progress-meta"><span>Card ${S.idx+1}/${S.queue.length}</span><span>${chap?.short}</span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round(((S.idx+1)/S.queue.length)*100)}%"></div></div></div>
+<div class="flash-wrap"><div class="flash-inner${S.flipped?' flipped':''}" data-action="flip" style="min-height:280px"><div class="flash-face ff"><div class="flash-tag">ENG</div><div class="flash-lbl">English</div><div class="flash-en">${term.en}</div><div class="flash-hint">👁 눌러서 뒤집기</div></div><div class="flash-face fb-card"><div class="flash-tag">KOR</div><div class="flash-lbl">한글</div><div class="flash-ko">${term.ko}</div><div class="flash-sub">${term.en}</div></div></div></div>
+<div class="flash-nav"><button class="btn btn-ghost" data-action="prev-flash"${S.idx===0?' disabled':''}>‹</button><button class="btn btn-ghost" data-action="flip">↺</button><button class="btn btn-primary" data-action="next-flash">${S.idx+1>=S.queue.length?'완료':'›'}</button></div></div>`}
+
+function renderTermsResults(){
+const pct=S.score.total>0?Math.round(S.score.ok/S.score.total*100):0;const isF=S.mode==='flashcard';
+let msg,col;if(isF){msg='완료!';col='var(--ink)'}else if(pct>=90){msg='훌륭해요!';col='var(--green)'}else if(pct>=70){msg='조금만 더!';col='var(--ink)'}else{msg='반복하면 돼요!';col='var(--rust)'}
+return`${hdr(true,'terms-home')}<div class="fade-in">
+<div class="result-hero"><div class="result-badge">RESULTS</div><div class="result-emoji">${pct>=70?'🏆':'💪'}</div>${isF?`<div class="display" style="font-size:2rem;color:var(--ink-deep)">${S.queue.length}장 완료</div>`:`<div class="result-score display">${pct}<span style="font-size:2rem">%</span></div><div class="result-sub">${S.score.ok}/${S.score.total} 정답</div>`}<div class="result-msg serif" style="color:${col}">${msg}</div></div>
+${S.wrong.length?`<div class="wrong-list"><div class="wrong-hdr">✕ 틀린 용어 (${S.wrong.length})</div><div class="wrong-items">${S.wrong.map(t=>`<div class="wrong-item"><div class="wrong-en">${t.en}</div><div class="wrong-ko">${t.ko}</div>${t.memo?`<div class="wrong-memo">💡 ${t.memo}</div>`:''}</div>`).join('')}</div></div>`:''}
+<div class="btn-stack">${S.wrong.length&&!isF?`<button class="btn btn-primary btn-full btn-serif" data-action="retry">↺ 틀린 문제 다시</button>`:''}<button class="btn btn-ghost btn-full" data-action="restart">⟳ 다시 시작</button><button class="btn btn-full" style="color:rgba(31,73,56,.55);background:none;border:none" data-action="terms-home">돌아가기</button></div></div>`}
+
+function renderMorphHome(){
+const qCnt=MORPH_QUIZ.filter(q=>S.mChapters.includes(q.ch)).length;
+let cardCnt=0;MORPH_STUDY.filter(c=>S.mChapters.includes(c.id)).forEach(c=>cardCnt+=c.cards.length);
+return`${hdr(true,'go-main')}<div class="fade-in">
+<h1 class="hero-title" style="font-size:1.5rem">🔬 치아 형태학</h1>
+<p class="hero-sub" style="margin-bottom:1.5rem">8개 챕터 · 개념학습 + 퀴즈</p>
+<div class="section-header"><span class="section-title serif">챕터 선택</span><div class="link-row"><button class="link-btn" data-action="mall-ch">전체</button><button class="link-btn" data-action="mnone-ch">해제</button></div></div>
+<div class="chips">${MORPH_CH.map(c=>`<div class="chip${S.mChapters.includes(c.id)?' active':''}" data-action="mch" data-val="${c.id}">${c.emoji} ${c.id}장</div>`).join('')}</div>
+<div class="summary-row"><div><div class="s-label">학습 카드</div><div class="s-val">${cardCnt}<span class="s-unit">장</span></div></div><div style="text-align:right"><div class="s-label">퀴즈</div><div class="s-val">${qCnt}<span class="s-unit">문제</span></div></div></div>
+<div class="btn-stack">
+<button class="btn btn-primary btn-full btn-serif" data-action="morph-study"${cardCnt===0?' disabled':''}>📖 개념 학습 (카드)</button>
+<button class="btn btn-ghost btn-full btn-serif" data-action="morph-quiz"${qCnt<4?' disabled':''}>📝 퀴즈 풀기</button>
+</div></div>`}
+
+function renderMorphStudy(){
+const card=S.mCards[S.mIdx];if(!card)return'';const ch=MORPH_CH.find(c=>c.id===card.ch);
+return`${hdr(true,'morph-home')}<div class="fade-in">
+<div class="progress-wrap"><div class="progress-meta"><span>${S.mIdx+1}/${S.mCards.length}</span><span>${ch?.emoji} ${card.ch}장</span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round(((S.mIdx+1)/S.mCards.length)*100)}%"></div></div></div>
+<div class="flash-wrap"><div class="flash-inner${S.mFlipped?' flipped':''}" data-action="mflip" style="min-height:240px">
+<div class="flash-face ff"><div class="flash-tag">Q</div><div class="study-front">${card.f}</div></div>
+<div class="flash-face fb-card" style="align-items:flex-start;justify-content:flex-start;padding-top:1.5rem"><div class="flash-tag">A</div><div class="study-back">${card.b}</div></div>
+</div></div>
+<div class="flash-nav"><button class="btn btn-ghost" data-action="mprev"${S.mIdx===0?' disabled':''}>‹ 이전</button><button class="btn btn-ghost" data-action="mflip">↺ 뒤집기</button><button class="btn btn-primary" data-action="mnext">${S.mIdx+1>=S.mCards.length?'완료':'다음 ›'}</button></div></div>`}
+
+function renderMorphQuiz(){
+const q=S.mQuiz[S.mQIdx];if(!q)return'';const ch=MORPH_CH.find(c=>c.id===q.ch);
+const opts=q.o.map((o,i)=>{let c='opt',b='badge',bi=String.fromCharCode(65+i);
+if(S.mQAns!==null){if(i===q.a){c+=' correct';b+=' g';bi='✓'}else if(i===S.mQAns.idx){c+=' wrong';b+=' r';bi='✕'}else c+=' dimmed'}
+const sh=S.mQAns&&i===S.mQAns.idx&&i!==q.a;
+return`<button class="${c}${sh?' shake':''}" data-action="m-answer" data-val="${i}"${S.mQAns!==null?' disabled':''}><span class="${b}">${bi}</span><span>${o}</span></button>`}).join('');
+const fb=S.mQAns!==null?`<div class="feedback ${S.mQAns.isOk?'ok':'fail'} fade-in"><div class="fb-icon ${S.mQAns.isOk?'g':'r'}">${S.mQAns.isOk?'✓':'✕'}</div><div><div class="fb-title ${S.mQAns.isOk?'g':'r'}">${S.mQAns.isOk?'정답!':'오답!'}</div><div class="fb-body ${S.mQAns.isOk?'g':'r'}">${q.e}</div></div></div><button class="btn btn-primary btn-full btn-serif" data-action="m-next">${S.mQIdx+1>=S.mQuiz.length?'결과 보기':'다음'} ›</button>`:'';
+return`${hdr(true,'morph-home')}<div class="fade-in">
+<div class="progress-wrap"><div class="progress-meta"><span>${S.mQIdx+1}/${S.mQuiz.length}</span><span style="display:flex;gap:.5rem"><span style="color:var(--green)">✓${S.mQScore.ok}</span><span style="color:var(--red)">✕${S.mQScore.total-S.mQScore.ok}</span></span></div><div class="progress-track"><div class="progress-fill" style="width:${Math.round((S.mQIdx/S.mQuiz.length)*100)}%"></div></div></div>
+<div class="q-card"><div class="q-badge">${ch?.emoji} ${q.ch}장</div><div class="q-label">형태학 퀴즈</div><div class="q-ko">${q.q}</div></div>
+<div class="options">${opts}</div>${fb}</div>`}
+
+function renderMorphResults(){
+const pct=S.mQScore.total>0?Math.round(S.mQScore.ok/S.mQScore.total*100):0;
+let msg,col;if(pct>=90){msg='형태학 마스터!';col='var(--green)'}else if(pct>=70){msg='거의 다 왔어요!';col='var(--ink)'}else{msg='개념 복습 후 다시!';col='var(--rust)'}
+return`${hdr(true,'morph-home')}<div class="fade-in">
+<div class="result-hero"><div class="result-badge">RESULTS</div><div class="result-emoji">${pct>=70?'🏆':'💪'}</div>
+<div class="result-score display">${pct}<span style="font-size:2rem">%</span></div><div class="result-sub">${S.mQScore.ok}/${S.mQScore.total} 정답</div>
+<div class="result-msg serif" style="color:${col}">${msg}</div></div>
+${S.mQWrong.length?`<div class="wrong-list"><div class="wrong-hdr">✕ 틀린 문제 (${S.mQWrong.length})</div><div class="wrong-items">${S.mQWrong.map(q=>`<div class="wrong-item"><div class="wrong-en">${q.q}</div><div class="wrong-ko">정답: ${q.o[q.a]}</div><div class="wrong-memo">💡 ${q.e}</div></div>`).join('')}</div></div>`:''}
+<div class="btn-stack">${S.mQWrong.length?`<button class="btn btn-primary btn-full btn-serif" data-action="m-retry">↺ 틀린 문제 다시</button>`:''}<button class="btn btn-ghost btn-full" data-action="morph-quiz">⟳ 다시 시작</button><button class="btn btn-full" style="color:rgba(31,73,56,.55);background:none;border:none" data-action="morph-home">돌아가기</button></div></div>`}
+
+function render(){
+let html='';
+if(S.section==='main')html=renderMain();
+else if(S.section==='terms'){
+  if(S.screen==='home')html=renderTermsHome();
+  else if(S.screen==='quiz')html=renderTermsQuiz();
+  else if(S.screen==='flash')html=renderTermsFlash();
+  else if(S.screen==='results')html=renderTermsResults();
+}else if(S.section==='morph'){
+  if(S.mScreen==='home')html=renderMorphHome();
+  else if(S.mScreen==='study')html=renderMorphStudy();
+  else if(S.mScreen==='quiz')html=renderMorphQuiz();
+  else if(S.mScreen==='results')html=renderMorphResults();
+  else if(S.mScreen==='study-done'){S.mScreen='home';html=renderMorphHome();}
+}
+app.innerHTML=html;window.scrollTo(0,0);
+if(S.section==='terms'&&S.screen==='quiz'&&S.qtype==='desc-type'&&!S.answered){
+  const inp=document.getElementById('type-input');
+  if(inp){inp.focus();inp.addEventListener('input',e=>{S.typedVal=e.target.value});inp.addEventListener('keydown',e=>{if(e.key==='Enter')answerTyped()})}}}
+
+app.addEventListener('click',e=>{
+const el=e.target.closest('[data-action]');if(!el)return;
+const a=el.dataset.action,v=el.dataset.val;
+switch(a){
+case'go-main':S.section='main';render();break;
+case'go-terms':S.section='terms';S.screen='home';render();break;
+case'go-morph':S.section='morph';S.mScreen='home';render();break;
+case'terms-home':S.screen='home';S.answered=null;render();break;
+case'morph-home':S.mScreen='home';S.mQAns=null;render();break;
+case'start':startSession();break;
+case'mode':S.mode=v;render();break;
+case'ch':{const id=parseInt(v);S.chapters=S.chapters.includes(id)?S.chapters.filter(c=>c!==id):[...S.chapters,id];render();break}
+case'all-ch':S.chapters=CHAPTERS.map(c=>c.id);render();break;
+case'none-ch':S.chapters=[];render();break;
+case'answer':answer(decodeURIComponent(v));break;
+case'submit-type':answerTyped();break;
+case'next':nextQ();break;
+case'flip':toggleFlip();break;
+case'next-flash':nextFlash();break;
+case'prev-flash':prevFlash();break;
+case'retry':retryWrong();break;
+case'restart':startSession();break;
+case'mch':{const id=parseInt(v);S.mChapters=S.mChapters.includes(id)?S.mChapters.filter(c=>c!==id):[...S.mChapters,id];render();break}
+case'mall-ch':S.mChapters=[1,2,3,4,5,6,7,8];render();break;
+case'mnone-ch':S.mChapters=[];render();break;
+case'morph-study':startMorphStudy();break;
+case'morph-quiz':startMorphQuiz();break;
+case'mflip':S.mFlipped=!S.mFlipped;document.querySelector('.flash-inner')?.classList.toggle('flipped',S.mFlipped);break;
+case'mnext':if(S.mIdx+1>=S.mCards.length){S.mScreen='home';render()}else{S.mIdx++;S.mFlipped=false;render()}break;
+case'mprev':if(S.mIdx>0){S.mIdx--;S.mFlipped=false;render()}break;
+case'm-answer':mAnswer(parseInt(v));break;
+case'm-next':mNextQ();break;
+case'm-retry':mRetryWrong();break;
+}});
+
+loadData();
+</script>
+</body>
+</html>

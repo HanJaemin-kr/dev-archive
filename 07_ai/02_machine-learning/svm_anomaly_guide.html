@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>One-Class SVM 직사각형 임계치 & Isolation Forest</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.65}
+
+.hero{background:linear-gradient(135deg,#155e75 0%,#0e7490 50%,#06b6d4 100%);color:#fff;padding:56px 48px 48px}
+.hero-tag{font-size:.72rem;letter-spacing:2.5px;text-transform:uppercase;color:#a5f3fc;margin-bottom:14px}
+.hero h1{font-size:2.6rem;font-weight:800;margin-bottom:6px;letter-spacing:-.5px}
+.hero-sub{font-size:1rem;opacity:.82;margin-bottom:22px;max-width:680px}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:4px 14px;font-size:.78rem;margin:3px}
+
+.nav{position:sticky;top:0;z-index:50;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 40px;display:flex;gap:0;overflow-x:auto}
+.nav a{padding:13px 15px;text-decoration:none;color:#64748b;font-size:.82rem;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.nav a:hover{color:#0891b2;border-bottom-color:#0891b2}
+
+.container{max-width:1080px;margin:0 auto;padding:40px 24px}
+.card{background:#fff;border-radius:14px;padding:36px;margin-bottom:30px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card-title{font-size:1.35rem;font-weight:700;color:#155e75;margin-bottom:4px}
+.card-desc{font-size:.88rem;color:#64748b;margin-bottom:24px}
+
+.chip{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:12px}
+.cg{background:#d1fae5;color:#065f46}.cb{background:#dbeafe;color:#1d4ed8}
+.cp{background:#ede9fe;color:#5b21b6}.co{background:#fef3c7;color:#92400e}
+.cr{background:#fee2e2;color:#991b1b}.cs{background:#cffafe;color:#155e75}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.gi{background:#f8fafc;border-radius:9px;padding:18px;border-left:3px solid #06b6d4}
+.gi h4{font-size:.92rem;color:#155e75;margin-bottom:6px}
+.gi p{font-size:.82rem;color:#475569}
+
+.tw{overflow-x:auto;margin:18px 0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{background:#155e75;color:#fff;padding:10px 14px;text-align:left;font-weight:600}
+td{padding:10px 14px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#f8fafc}
+.tg{color:#16a34a;font-weight:700}.tb{color:#dc2626;font-weight:700}.ty{color:#ca8a04;font-weight:700}
+
+.cb-wrap{background:#0f172a;border-radius:10px;overflow:hidden;margin:18px 0}
+.cb-head{background:#1e293b;padding:8px 18px;font-size:.7rem;color:#94a3b8;font-weight:700;letter-spacing:1px}
+pre{padding:20px;overflow-x:auto;font-size:.78rem;line-height:1.7;color:#e2e8f0}
+code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+
+.al{padding:13px 18px;border-radius:8px;margin:14px 0;font-size:.88rem}
+.al-i{background:#ecfeff;border-left:4px solid #06b6d4;color:#155e75}
+.al-t{background:#f0fdf4;border-left:4px solid #22c55e;color:#14532d}
+.al-w{background:#fefce8;border-left:4px solid #eab308;color:#713f12}
+.al-r{background:#fef2f2;border-left:4px solid #ef4444;color:#991b1b}
+
+.sv{text-align:center;margin:24px 0;overflow-x:auto}
+.sv svg{max-width:100%;height:auto}
+.sc{font-size:.78rem;color:#94a3b8;margin-top:8px;font-style:italic}
+
+.qa-item{margin-bottom:18px}
+.qq{background:#ecfeff;border-left:4px solid #0891b2;padding:12px 16px;border-radius:4px 8px 0 0;font-weight:700;color:#155e75;font-size:.88rem}
+.qa{background:#f8fafc;border:1px solid #e2e8f0;border-top:none;padding:12px 16px;border-radius:0 0 8px 8px;font-size:.88rem}
+
+.step{display:flex;gap:14px;margin:14px 0;align-items:flex-start}
+.step-n{flex:none;width:30px;height:30px;border-radius:50%;background:#0e7490;color:#fff;font-weight:800;font-size:.9rem;display:flex;align-items:center;justify-content:center}
+.step-b h4{font-size:.95rem;color:#155e75;margin-bottom:3px}
+.step-b p{font-size:.85rem;color:#475569}
+
+@media(max-width:680px){.g2,.g3{grid-template-columns:1fr}.hero{padding:36px 24px}.hero h1{font-size:1.7rem}}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-tag">Anomaly Detection · Vibration PdM · Unsupervised</div>
+  <h1>One-Class SVM 직사각형 임계치 &amp; Isolation Forest</h1>
+  <p class="hero-sub">진동 특징값 2개(x, y)로 One-Class SVM을 학습해 <strong>정상 영역을 감싸는 곡선 경계</strong>를 얻고,
+  이를 <strong>축정렬 직사각형(Bounding Box)</strong>으로 근사해 <strong>해석 가능한 알람 임계치</strong>를 뽑아내는 과정 정리.</p>
+  <div>
+    <span class="badge">One-Class SVM (RBF)</span>
+    <span class="badge">정상영역 Bounding Box</span>
+    <span class="badge">x·y = 선택형 특징</span>
+    <span class="badge">임계치 = min/max</span>
+    <span class="badge">Isolation Forest</span>
+  </div>
+</header>
+
+<nav class="nav">
+  <a href="#overview">개요·아이디어</a>
+  <a href="#pipeline">전체 파이프라인</a>
+  <a href="#featurespace">특징공간·경계</a>
+  <a href="#params">nu·gamma</a>
+  <a href="#bbox">임계치 추출</a>
+  <a href="#tradeoff">곡선 vs 사각형</a>
+  <a href="#runtime">실시간 판정</a>
+  <a href="#isoforest">Isolation Forest</a>
+  <a href="#compare">SVM vs IF</a>
+  <a href="#qa">Q&amp;A</a>
+</nav>
+
+<div class="container">
+
+<!-- ══ 1. OVERVIEW ══ -->
+<section id="overview" class="card">
+  <span class="chip cs">Overview</span>
+  <div class="card-title">아이디어 — 왜 곡선 경계를 직사각형으로 바꾸나</div>
+  <div class="card-desc">이상탐지 모델은 "정상 영역"을 학습합니다. 문제는 그 경계가 <strong>곡선(블랙박스)</strong>이라 현장에서 쓰기 어렵다는 것. 그래서 <strong>정상 영역을 감싸는 직사각형</strong>으로 근사해, 각 특징에 익숙한 <strong>상·하한 임계치</strong>를 뽑아냅니다.</div>
+
+  <div class="g3">
+    <div class="gi"><h4>🎯 문제</h4><p>진동 알람은 보통 "각 지표별 임계치(상/하한)"로 관리. 하지만 두 특징의 <em>조합</em>으로 봐야 정상/이상이 갈리는 경우가 많음.</p></div>
+    <div class="gi"><h4>🧠 학습</h4><p>정상 운전 데이터만으로 One-Class SVM 학습 → 정상 데이터를 감싸는 곡선(RBF) 경계 획득. 라벨 불필요.</p></div>
+    <div class="gi"><h4>📐 근사</h4><p>정상으로 판정된 영역의 <strong>축정렬 Bounding Box</strong>를 계산 → x·y 각각의 min/max = 4개 임계치.</p></div>
+    <div class="gi"><h4>🔍 해석성</h4><p>결과가 "RMS 3.2~7.1, Kurtosis 2.5~4.8" 같은 <strong>사람이 읽는 숫자</strong>. 현장 엔지니어가 이해·조정 가능.</p></div>
+    <div class="gi"><h4>⚡ 경량 운영</h4><p>운영 땐 SVM 재추론 불필요 — <strong>4개 숫자 비교(min≤값≤max)</strong>만. PLC·엣지·대시보드 어디서나 구현.</p></div>
+    <div class="gi"><h4>🎛️ 유연성</h4><p>x·y 축은 <strong>UI에서 사용자가 선택</strong>(RMS, Peak, Kurtosis, Crest 등 임의 2개). 설비 특성에 맞춰 조합 변경.</p></div>
+  </div>
+
+  <div class="al al-i"><strong>핵심 한 줄:</strong> One-Class SVM으로 "정상이 어디까지인가"를 데이터로 학습하고, 그 결과를 <strong>직사각형 임계치로 번역</strong>해 해석 가능하고 배포하기 쉬운 알람 규칙을 만든다.</div>
+</section>
+
+<!-- ══ 2. PIPELINE ══ -->
+<section id="pipeline" class="card">
+  <span class="chip cp">Pipeline</span>
+  <div class="card-title">전체 파이프라인</div>
+  <div class="card-desc">진동 원시신호부터 실시간 알람까지의 흐름. 학습은 오프라인(주기적 재학습), 판정은 온라인(경량).</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 700 300" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="700" height="300" fill="#f8fafc" rx="10"/>
+      <defs>
+        <marker id="ar-c" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#0e7490"/></marker>
+        <marker id="ar-s" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#94a3b8"/></marker>
+        <marker id="ar-r" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#ef4444"/></marker>
+        <marker id="ar-v" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><polygon points="0,0 6,3 0,6" fill="#7c3aed"/></marker>
+      </defs>
+      <text x="350" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">학습(오프라인) → 임계치 → 판정(온라인)</text>
+
+      <!-- offline row -->
+      <text x="46" y="52" font-size="9" font-weight="bold" fill="#0e7490">① 학습 (오프라인)</text>
+      <rect x="20" y="60" width="96" height="46" rx="7" fill="#fff" stroke="#0891b2"/><text x="68" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#155e75">진동 원시신호</text><text x="68" y="94" text-anchor="middle" font-size="8" fill="#64748b">파형(가속도)</text>
+      <rect x="132" y="60" width="100" height="46" rx="7" fill="#fff" stroke="#0891b2"/><text x="182" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#155e75">특징 추출</text><text x="182" y="94" text-anchor="middle" font-size="8" fill="#64748b">RMS·Peak·Kurt…</text>
+      <rect x="248" y="60" width="104" height="46" rx="7" fill="#ecfeff" stroke="#0e7490" stroke-width="1.6"/><text x="300" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#155e75">x·y 선택 (UI)</text><text x="300" y="94" text-anchor="middle" font-size="8" fill="#0891b2">특징 2개 지정</text>
+      <rect x="368" y="60" width="96" height="46" rx="7" fill="#fff" stroke="#0891b2"/><text x="416" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#155e75">StandardScaler</text><text x="416" y="94" text-anchor="middle" font-size="8" fill="#64748b">정규화</text>
+      <rect x="480" y="60" width="104" height="46" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.6"/><text x="532" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#5b21b6">One-Class SVM</text><text x="532" y="94" text-anchor="middle" font-size="8" fill="#6d28d9">정상영역 학습</text>
+      <rect x="600" y="60" width="82" height="46" rx="7" fill="#fff" stroke="#7c3aed"/><text x="641" y="79" text-anchor="middle" font-size="9" font-weight="bold" fill="#5b21b6">곡선 경계</text><text x="641" y="94" text-anchor="middle" font-size="8" fill="#6d28d9">정상 영역</text>
+
+      <line x1="116" y1="83" x2="130" y2="83" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <line x1="232" y1="83" x2="246" y2="83" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <line x1="352" y1="83" x2="366" y2="83" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <line x1="464" y1="83" x2="478" y2="83" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <line x1="584" y1="83" x2="598" y2="83" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#ar-v)"/>
+
+      <!-- to bbox -->
+      <line x1="641" y1="106" x2="641" y2="140" stroke="#7c3aed" stroke-width="1.6" marker-end="url(#ar-v)"/>
+      <rect x="470" y="142" width="212" height="52" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.8"/>
+      <text x="576" y="162" text-anchor="middle" font-size="10" font-weight="bold" fill="#92400e">② Bounding Box 추출</text>
+      <text x="576" y="180" text-anchor="middle" font-size="8.5" fill="#92400e">정상영역의 min/max → 직사각형 임계치</text>
+
+      <!-- thresholds artifact -->
+      <line x1="470" y1="168" x2="360" y2="168" stroke="#f59e0b" stroke-width="1.6" marker-end="url(#ar-s)"/>
+      <rect x="150" y="142" width="204" height="52" rx="8" fill="#fff" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="252" y="161" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#92400e">임계치 4개 (저장/배포)</text>
+      <text x="252" y="178" text-anchor="middle" font-size="8.5" fill="#b45309">x_min·x_max·y_min·y_max</text>
+
+      <!-- online row -->
+      <text x="46" y="228" font-size="9" font-weight="bold" fill="#ef4444">③ 판정 (온라인·경량)</text>
+      <rect x="20" y="236" width="110" height="46" rx="7" fill="#fff" stroke="#0891b2"/><text x="75" y="255" text-anchor="middle" font-size="9" font-weight="bold" fill="#155e75">실시간 특징(x,y)</text><text x="75" y="270" text-anchor="middle" font-size="8" fill="#64748b">1초 주기 등</text>
+      <rect x="150" y="236" width="150" height="46" rx="7" fill="#ecfeff" stroke="#0e7490" stroke-width="1.6"/><text x="225" y="255" text-anchor="middle" font-size="9" font-weight="bold" fill="#155e75">사각형 안에 있나?</text><text x="225" y="270" text-anchor="middle" font-size="8" fill="#0891b2">min ≤ 값 ≤ max (4비교)</text>
+      <rect x="322" y="230" width="120" height="26" rx="6" fill="#dcfce7" stroke="#16a34a"/><text x="382" y="247" text-anchor="middle" font-size="9" font-weight="bold" fill="#166534">예 → 정상</text>
+      <rect x="322" y="262" width="120" height="26" rx="6" fill="#fee2e2" stroke="#ef4444"/><text x="382" y="279" text-anchor="middle" font-size="9" font-weight="bold" fill="#991b1b">아니오 → 알람</text>
+
+      <line x1="130" y1="259" x2="148" y2="259" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <line x1="300" y1="252" x2="320" y2="244" stroke="#16a34a" stroke-width="1.5" marker-end="url(#ar-c)"/>
+      <line x1="300" y1="266" x2="320" y2="274" stroke="#ef4444" stroke-width="1.5" marker-end="url(#ar-r)"/>
+      <line x1="252" y1="194" x2="225" y2="234" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#ar-s)"/>
+      <text x="470" y="252" font-size="8.5" fill="#64748b">→ 알람은 Kafka/MQTT로 발행,</text>
+      <text x="470" y="266" font-size="8.5" fill="#64748b">&nbsp;&nbsp;&nbsp;대시보드·InfluxDB로 전달</text>
+    </svg>
+    <div class="sc">학습은 무겁게(SVM), 운영은 가볍게(4개 임계치 비교) — 임계치가 학습과 판정을 잇는 산출물</div>
+  </div>
+</section>
+
+<!-- ══ 3. FEATURE SPACE ══ -->
+<section id="featurespace" class="card">
+  <span class="chip cs">Feature Space</span>
+  <div class="card-title">특징 공간 · One-Class SVM 경계 · 직사각형 임계치</div>
+  <div class="card-desc">두 특징을 축으로 한 2D 산점도. 정상 데이터를 <strong>보라색 곡선(SVM 경계)</strong>이 감싸고, 그 곡선을 <strong>주황 직사각형(Bounding Box)</strong>이 다시 감쌉니다. 사각형의 네 변이 곧 임계치.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 640 440" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="640" height="440" fill="#f8fafc" rx="10"/>
+      <text x="320" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">정상 영역 → Bounding Box → 임계치</text>
+
+      <!-- axes -->
+      <line x1="80" y1="340" x2="600" y2="340" stroke="#334155" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <line x1="80" y1="340" x2="80" y2="52" stroke="#334155" stroke-width="1.5" marker-end="url(#ar-s)"/>
+      <text x="340" y="374" text-anchor="middle" font-size="10" fill="#334155" font-weight="bold">특징 X (예: RMS) →</text>
+      <text x="30" y="200" text-anchor="middle" font-size="10" fill="#334155" font-weight="bold" transform="rotate(-90 30 200)">특징 Y (예: Kurtosis) →</text>
+
+      <!-- bounding box -->
+      <rect x="195" y="128" width="240" height="144" fill="#fffbeb" fill-opacity="0.5" stroke="#f59e0b" stroke-width="2" stroke-dasharray="7,4"/>
+
+      <!-- SVM curve (blob) -->
+      <ellipse cx="315" cy="200" rx="120" ry="72" fill="#ede9fe" fill-opacity="0.55" stroke="#7c3aed" stroke-width="2"/>
+
+      <!-- normal dots -->
+      <g fill="#0891b2">
+        <circle cx="250" cy="190" r="4"/><circle cx="280" cy="172" r="4"/><circle cx="305" cy="205" r="4"/>
+        <circle cx="335" cy="192" r="4"/><circle cx="360" cy="218" r="4"/><circle cx="292" cy="235" r="4"/>
+        <circle cx="322" cy="248" r="4"/><circle cx="270" cy="220" r="4"/><circle cx="352" cy="185" r="4"/>
+        <circle cx="312" cy="168" r="4"/><circle cx="342" cy="238" r="4"/><circle cx="232" cy="210" r="4"/>
+        <circle cx="392" cy="203" r="4"/><circle cx="300" cy="222" r="4"/><circle cx="278" cy="200" r="4"/>
+        <circle cx="356" cy="212" r="4"/><circle cx="328" cy="225" r="4"/><circle cx="248" cy="228" r="4"/>
+      </g>
+
+      <!-- anomalies -->
+      <g stroke="#e11d48" stroke-width="2.2">
+        <line x1="497" y1="90" x2="509" y2="102"/><line x1="509" y1="90" x2="497" y2="102"/>
+        <line x1="294" y1="82" x2="306" y2="94"/><line x1="306" y1="82" x2="294" y2="94"/>
+        <line x1="464" y1="224" x2="476" y2="236"/><line x1="476" y1="224" x2="464" y2="236"/>
+        <line x1="146" y1="300" x2="158" y2="312"/><line x1="158" y1="300" x2="146" y2="312"/>
+      </g>
+
+      <!-- threshold projections -->
+      <line x1="195" y1="272" x2="195" y2="340" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4,3"/>
+      <line x1="435" y1="272" x2="435" y2="340" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4,3"/>
+      <line x1="80" y1="128" x2="195" y2="128" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4,3"/>
+      <line x1="80" y1="272" x2="195" y2="272" stroke="#b45309" stroke-width="1.3" stroke-dasharray="4,3"/>
+      <text x="195" y="356" text-anchor="middle" font-size="9" fill="#b45309" font-weight="bold">x_min</text>
+      <text x="435" y="356" text-anchor="middle" font-size="9" fill="#b45309" font-weight="bold">x_max</text>
+      <text x="74" y="131" text-anchor="end" font-size="9" fill="#b45309" font-weight="bold">y_max</text>
+      <text x="74" y="275" text-anchor="end" font-size="9" fill="#b45309" font-weight="bold">y_min</text>
+
+      <!-- legend -->
+      <rect x="440" y="300" width="188" height="118" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <circle cx="456" cy="320" r="4" fill="#0891b2"/><text x="468" y="324" font-size="9" fill="#334155">정상 데이터</text>
+      <g stroke="#e11d48" stroke-width="2"><line x1="451" y1="337" x2="461" y2="347"/><line x1="461" y1="337" x2="451" y2="347"/></g><text x="468" y="346" font-size="9" fill="#334155">이상 데이터</text>
+      <rect x="450" y="357" width="14" height="10" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/><text x="468" y="366" font-size="9" fill="#334155">One-Class SVM 경계(곡선)</text>
+      <rect x="450" y="377" width="14" height="10" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="3,2"/><text x="468" y="386" font-size="9" fill="#334155">임계치 직사각형(BBox)</text>
+      <text x="456" y="406" font-size="8.5" fill="#64748b">4변 = x_min·x_max·y_min·y_max</text>
+
+      <text x="320" y="410" text-anchor="middle" font-size="9" fill="#7c3aed" font-style="italic">곡선(SVM)이 "진짜 정상 모양", 직사각형은 그것을 감싸는 해석 가능한 근사</text>
+    </svg>
+    <div class="sc">정상 데이터를 감싼 SVM 곡선 → 그 곡선의 축정렬 Bounding Box → 네 변이 각 특징의 상·하한 임계치</div>
+  </div>
+</section>
+
+<!-- ══ 4. PARAMS ══ -->
+<section id="params" class="card">
+  <span class="chip co">Parameters</span>
+  <div class="card-title">핵심 파라미터 — nu, gamma, 그리고 스케일링</div>
+  <div class="card-desc">경계의 <strong>조임 정도</strong>가 곧 임계치의 넓이를 결정합니다. 잘못 잡으면 과경보(너무 조임) 또는 놓침(너무 느슨).</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 660 210" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="660" height="210" fill="#f8fafc" rx="10"/>
+      <text x="330" y="22" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">nu 값에 따른 경계 조임 (작을수록 느슨)</text>
+
+      <!-- panel 1 nu small -->
+      <rect x="20" y="36" width="200" height="150" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="120" y="54" text-anchor="middle" font-size="10" font-weight="bold" fill="#0891b2">nu = 0.01 (느슨)</text>
+      <ellipse cx="120" cy="115" rx="82" ry="52" fill="#ecfeff" stroke="#7c3aed" stroke-width="1.8"/>
+      <g fill="#0891b2"><circle cx="100" cy="105" r="3"/><circle cx="130" cy="100" r="3"/><circle cx="115" cy="125" r="3"/><circle cx="145" cy="120" r="3"/><circle cx="90" cy="128" r="3"/><circle cx="135" cy="135" r="3"/><circle cx="108" cy="118" r="3"/></g>
+      <text x="120" y="178" text-anchor="middle" font-size="8" fill="#64748b">거의 모든 점 포함 → 이상 놓칠 위험</text>
+
+      <!-- panel 2 -->
+      <rect x="230" y="36" width="200" height="150" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="330" y="54" text-anchor="middle" font-size="10" font-weight="bold" fill="#16a34a">nu = 0.05 (균형)</text>
+      <ellipse cx="330" cy="115" rx="62" ry="40" fill="#ecfeff" stroke="#7c3aed" stroke-width="1.8"/>
+      <g fill="#0891b2"><circle cx="315" cy="108" r="3"/><circle cx="340" cy="103" r="3"/><circle cx="328" cy="123" r="3"/><circle cx="352" cy="118" r="3"/><circle cx="308" cy="122" r="3"/><circle cx="345" cy="130" r="3"/></g>
+      <g stroke="#e11d48" stroke-width="1.6"><line x1="392" y1="80" x2="400" y2="88"/><line x1="400" y1="80" x2="392" y2="88"/></g>
+      <text x="330" y="178" text-anchor="middle" font-size="8" fill="#64748b">정상은 감싸고 이상치는 배제 (권장)</text>
+
+      <!-- panel 3 -->
+      <rect x="440" y="36" width="200" height="150" rx="8" fill="#fff" stroke="#e2e8f0"/>
+      <text x="540" y="54" text-anchor="middle" font-size="10" font-weight="bold" fill="#dc2626">nu = 0.20 (조임)</text>
+      <ellipse cx="540" cy="115" rx="40" ry="26" fill="#ecfeff" stroke="#7c3aed" stroke-width="1.8"/>
+      <g fill="#0891b2"><circle cx="530" cy="110" r="3"/><circle cx="548" cy="108" r="3"/><circle cx="540" cy="122" r="3"/></g>
+      <g fill="#e11d48"><circle cx="512" cy="100" r="3"/><circle cx="568" cy="128" r="3"/><circle cx="520" cy="132" r="3"/><circle cx="562" cy="98" r="3"/></g>
+      <text x="540" y="172" text-anchor="middle" font-size="8" fill="#64748b">정상마저 밖으로 → 과경보(오탐)</text>
+      <text x="540" y="182" text-anchor="middle" font-size="7.5" fill="#94a3b8">(빨강=정상인데 이상 판정)</text>
+    </svg>
+    <div class="sc">nu는 "정상 데이터 중 경계 밖으로 허용할 비율의 상한" — 클수록 경계가 조여짐</div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <tr><th>파라미터</th><th>의미</th><th>크게 하면</th><th>실무 팁</th></tr>
+      <tr><td><code>nu</code> (0~1]</td><td>경계 밖 정상(오차) 허용 비율의 <b>상한</b> = 서포트벡터 비율의 <b>하한</b></td><td>경계가 <b>조여짐</b>(임계치 사각형 작아짐)</td><td>예상 이상치 비율로 시작(0.01~0.05)</td></tr>
+      <tr><td><code>gamma</code></td><td>RBF 커널 폭. 한 점의 영향 반경</td><td>경계가 <b>구불구불·과적합</b></td><td><code>'scale'</code>로 시작, 과하면 낮춤</td></tr>
+      <tr><td><code>kernel</code></td><td>경계 모양</td><td>—</td><td>비선형 정상영역엔 <code>'rbf'</code></td></tr>
+      <tr><td>스케일링</td><td>두 특징 단위/범위 정규화</td><td>—</td><td class="tb">필수. RBF는 스케일에 민감(안 하면 큰 축이 지배)</td></tr>
+    </table>
+  </div>
+  <div class="al al-w"><strong>주의:</strong> <code>StandardScaler</code>를 학습 때 <code>fit</code>하고 <strong>같은 scaler</strong>로 운영 데이터를 <code>transform</code>해야 함. 임계치 직사각형은 <em>원래 단위</em>로 되돌려 저장하면 현장에서 바로 읽힘(역변환).</div>
+</section>
+
+<!-- ══ 5. BBOX EXTRACTION ══ -->
+<section id="bbox" class="card">
+  <span class="chip cg">Threshold Extraction</span>
+  <div class="card-title">임계치 추출 — 정상영역 Bounding Box (코드)</div>
+  <div class="card-desc">특징 공간에 격자(grid)를 깔고 SVM이 <strong>정상(+1)</strong>이라 판정한 셀들의 min/max로 직사각형을 구합니다.</div>
+
+  <div class="step"><div class="step-n">1</div><div class="step-b"><h4>정상 데이터의 두 특징 준비 + 스케일링</h4><p>UI에서 선택된 x·y 특징만 뽑아 <code>StandardScaler</code>로 정규화.</p></div></div>
+  <div class="step"><div class="step-n">2</div><div class="step-b"><h4>One-Class SVM 학습</h4><p>정상 데이터만으로 정상 영역을 감싸는 곡선 경계 학습.</p></div></div>
+  <div class="step"><div class="step-n">3</div><div class="step-b"><h4>격자 판정</h4><p>특징 공간 전체에 그리드를 만들고 각 점이 정상(+1)/이상(−1)인지 <code>predict</code>.</p></div></div>
+  <div class="step"><div class="step-n">4</div><div class="step-b"><h4>Bounding Box = 임계치</h4><p>정상으로 판정된 점들의 x·y 최소·최대 → 직사각형 네 변.</p></div></div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">🐍 one_class_svm_threshold.py — 학습부터 임계치 추출까지</div>
+    <pre><code>import numpy as np
+from sklearn.svm import OneClassSVM
+from sklearn.preprocessing import StandardScaler
+
+def extract_rectangle_thresholds(normal_df, x_feat, y_feat, nu=0.03, grid=300):
+    """정상 데이터로 One-Class SVM 학습 → 정상영역 Bounding Box(임계치) 반환."""
+    # 1) UI에서 선택된 두 특징
+    X = normal_df[[x_feat, y_feat]].to_numpy()          # shape (N, 2)
+
+    # 2) 스케일링 (RBF는 스케일에 민감 — 필수)
+    scaler = StandardScaler().fit(X)
+    Xs = scaler.transform(X)
+
+    # 3) One-Class SVM 학습 (정상 데이터만)
+    oc = OneClassSVM(kernel="rbf", nu=nu, gamma="scale").fit(Xs)
+
+    # 4) 원래 단위 특징 공간에 격자 생성
+    pad_x = (X[:,0].max() - X[:,0].min()) * 0.05
+    pad_y = (X[:,1].max() - X[:,1].min()) * 0.05
+    xx, yy = np.meshgrid(
+        np.linspace(X[:,0].min()-pad_x, X[:,0].max()+pad_x, grid),
+        np.linspace(X[:,1].min()-pad_y, X[:,1].max()+pad_y, grid),
+    )
+    pts = np.c_[xx.ravel(), yy.ravel()]
+
+    # 5) 격자 점을 스케일링 후 정상(+1)/이상(-1) 판정
+    pred = oc.predict(scaler.transform(pts))
+    normal_pts = pts[pred == 1]                          # 정상으로 판정된 영역
+    if len(normal_pts) == 0:
+        raise ValueError("정상 영역이 비었음 — nu/gamma 조정 필요")
+
+    # 6) 정상영역의 축정렬 Bounding Box = 임계치 (원래 단위)
+    x_min, y_min = normal_pts.min(axis=0)
+    x_max, y_max = normal_pts.max(axis=0)
+
+    return {
+        x_feat: {"min": float(x_min), "max": float(x_max)},
+        y_feat: {"min": float(y_min), "max": float(y_max)},
+        "meta": {"nu": nu, "n_train": len(X)},
+    }
+
+# 예: RMS × Kurtosis 로 임계치 뽑기
+th = extract_rectangle_thresholds(normal_df, "rms", "kurtosis", nu=0.03)
+# → {'rms': {'min':2.9,'max':7.1}, 'kurtosis':{'min':2.4,'max':4.8}, ...}</code></pre>
+  </div>
+
+  <div class="al al-i"><strong>대안(더 타이트):</strong> 격자 대신 <em>학습 데이터 중 SVM이 정상(+1)으로 준 실제 포인트</em>들의 min/max를 쓰면 사각형이 더 조여짐. 격자 방식은 "정상 <u>영역</u> 전체"를, 포인트 방식은 "실제 관측된 정상 범위"를 감쌈. 데이터가 경계 근처까지 고르게 있으면 둘이 비슷.</div>
+</section>
+
+<!-- ══ 6. TRADEOFF ══ -->
+<section id="tradeoff" class="card">
+  <span class="chip cr">Trade-off</span>
+  <div class="card-title">곡선 vs 직사각형 — 무엇을 잃는가</div>
+  <div class="card-desc">직사각형은 편하지만 곡선과 다릅니다. 특히 <strong>모서리 영역</strong>과 <strong>대각선으로 길쭉한 정상영역</strong>에서 오차가 큽니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 620 260" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="620" height="260" fill="#f8fafc" rx="10"/>
+
+      <!-- case A: corners -->
+      <text x="165" y="24" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">① 모서리 = 과대 포함(느슨)</text>
+      <rect x="55" y="40" width="220" height="150" fill="#fef2f2" fill-opacity="0.4" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+      <ellipse cx="165" cy="115" rx="95" ry="62" fill="#ede9fe" fill-opacity="0.6" stroke="#7c3aed" stroke-width="2"/>
+      <!-- corner anomaly inside rect, outside ellipse -->
+      <g stroke="#e11d48" stroke-width="2.2"><line x1="245" y1="52" x2="257" y2="64"/><line x1="257" y1="52" x2="245" y2="64"/></g>
+      <text x="165" y="212" text-anchor="middle" font-size="8.5" fill="#475569">모서리 ✕: 사각형=정상, 곡선=이상</text>
+      <text x="165" y="226" text-anchor="middle" font-size="8.5" fill="#991b1b">→ 실제 이상을 놓칠 수 있음(과소경보)</text>
+
+      <!-- case B: diagonal -->
+      <text x="455" y="24" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">② 대각선 정상영역 = 과대 사각형</text>
+      <rect x="345" y="40" width="220" height="150" fill="#fef2f2" fill-opacity="0.4" stroke="#f59e0b" stroke-width="2" stroke-dasharray="6,4"/>
+      <ellipse cx="455" cy="115" rx="105" ry="40" fill="#ede9fe" fill-opacity="0.6" stroke="#7c3aed" stroke-width="2" transform="rotate(-32 455 115)"/>
+      <text x="455" y="212" text-anchor="middle" font-size="8.5" fill="#475569">두 특징이 상관 → 정상영역이 기울어짐</text>
+      <text x="455" y="226" text-anchor="middle" font-size="8.5" fill="#991b1b">→ 사각형이 크게 헐거워짐(빈 모서리↑)</text>
+    </svg>
+    <div class="sc">직사각형 근사의 두 약점 — 모서리 과대포함, 대각선(상관) 정상영역에서의 헐거움</div>
+  </div>
+
+  <div class="g2">
+    <div class="al al-t"><strong>직사각형이 좋은 경우</strong><br>· 두 특징이 대체로 독립적일 때<br>· 해석성·현장 배포가 최우선일 때<br>· 각 특징별 상·하한 알람이 관행일 때<br>· 도입 초기, 신뢰 쌓는 단계</div>
+    <div class="al al-w"><strong>보완책</strong><br>· 상관 크면 <b>PCA로 축 회전 후</b> 사각형(회전된 박스 효과)<br>· 곡선 경계를 그대로 쓰거나 <b>Isolation Forest 병행</b>(다차원)<br>· 모서리 위험 구간엔 마진을 안쪽으로 좁힘<br>· 2D 사각형 + 다차원 IF <b>하이브리드</b></div>
+  </div>
+</section>
+
+<!-- ══ 7. RUNTIME ══ -->
+<section id="runtime" class="card">
+  <span class="chip cb">Runtime</span>
+  <div class="card-title">실시간 판정 — 모델 없이 4번 비교</div>
+  <div class="card-desc">운영에선 SVM을 다시 부르지 않습니다. 저장된 임계치 4개와 <strong>min ≤ 값 ≤ max</strong> 비교만.</div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">🐍 realtime_check.py — 임계치 적용 & 알람</div>
+    <pre><code>def is_anomaly(x_val, y_val, th, x_feat, y_feat):
+    """저장된 직사각형 임계치로 실시간 판정 (모델 로딩 불필요)."""
+    xr, yr = th[x_feat], th[y_feat]
+    inside = (xr["min"] <= x_val <= xr["max"]) and \
+             (yr["min"] <= y_val <= yr["max"])
+    reason = []
+    if not (xr["min"] <= x_val <= xr["max"]):
+        reason.append(f"{x_feat}={x_val:.2f} (범위 {xr['min']:.2f}~{xr['max']:.2f})")
+    if not (yr["min"] <= y_val <= yr["max"]):
+        reason.append(f"{y_feat}={y_val:.2f} (범위 {yr['min']:.2f}~{yr['max']:.2f})")
+    return {"is_anomaly": not inside, "reasons": reason}
+
+# 예: 실시간 특징값 판정
+r = is_anomaly(8.4, 3.1, th, "rms", "kurtosis")
+# → {'is_anomaly': True, 'reasons': ['rms=8.40 (범위 2.90~7.10)']}
+#    어떤 특징이 왜 벗어났는지까지 바로 나옴 → 알람 메시지에 그대로 사용</code></pre>
+  </div>
+
+  <div class="g3">
+    <div class="gi"><h4>⚡ 초경량</h4><p>비교 4번 → 마이크로초. 수천 설비를 1초 주기로 판정해도 부담 없음.</p></div>
+    <div class="gi"><h4>🗣️ 설명 가능</h4><p>"RMS가 상한 7.1을 초과(8.4)" 처럼 <strong>이유가 그대로</strong> 나옴 → 알람 메시지·리포트에 직결.</p></div>
+    <div class="gi"><h4>🔌 이식 쉬움</h4><p>임계치는 그냥 숫자 4개 → PLC 래더, 엣지 C, SQL, 대시보드 어디든 이식.</p></div>
+  </div>
+</section>
+
+<!-- ══ 8. ISOLATION FOREST ══ -->
+<section id="isoforest" class="card">
+  <span class="chip cp">Isolation Forest</span>
+  <div class="card-title">Isolation Forest — 다차원 이상탐지 보완</div>
+  <div class="card-desc">"이상치는 <strong>몇 번의 랜덤 분할만으로 고립</strong>된다"는 원리. 2개 특징으로 제한되는 직사각형과 달리 <strong>여러 특징을 한꺼번에</strong> 다룹니다.</div>
+
+  <div class="sv">
+    <svg viewBox="0 0 660 280" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="660" height="280" fill="#f8fafc" rx="10"/>
+      <text x="330" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">고립 원리 — path length가 짧을수록 이상</text>
+
+      <!-- normal: deep tree -->
+      <text x="165" y="50" text-anchor="middle" font-size="10" font-weight="bold" fill="#0891b2">정상 샘플 — 깊게 들어가야 고립</text>
+      <g stroke="#94a3b8" stroke-width="1.3">
+        <line x1="165" y1="66" x2="115" y2="98"/><line x1="165" y1="66" x2="215" y2="98"/>
+        <line x1="115" y1="110" x2="85" y2="142"/><line x1="115" y1="110" x2="150" y2="142"/>
+        <line x1="150" y1="154" x2="128" y2="186"/><line x1="150" y1="154" x2="178" y2="186"/>
+        <line x1="178" y1="198" x2="160" y2="228"/><line x1="178" y1="198" x2="200" y2="228"/>
+      </g>
+      <g fill="#cbd5e1"><circle cx="165" cy="62" r="9"/><circle cx="115" cy="104" r="9"/><circle cx="215" cy="104" r="9"/><circle cx="85" cy="148" r="9"/><circle cx="150" cy="148" r="9"/><circle cx="128" cy="192" r="9"/></g>
+      <circle cx="178" cy="192" r="9" fill="#a5b4fc"/>
+      <circle cx="200" cy="234" r="10" fill="#0891b2"/><text x="200" y="238" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">✓</text>
+      <text x="330" y="150" text-anchor="middle" font-size="9" fill="#64748b">path length ≈ 5</text>
+
+      <!-- anomaly: shallow -->
+      <text x="500" y="50" text-anchor="middle" font-size="10" font-weight="bold" fill="#e11d48">이상 샘플 — 몇 번에 고립</text>
+      <g stroke="#94a3b8" stroke-width="1.3">
+        <line x1="500" y1="66" x2="450" y2="98"/><line x1="500" y1="66" x2="560" y2="98"/>
+        <line x1="560" y1="110" x2="530" y2="142"/><line x1="560" y1="110" x2="595" y2="142"/>
+      </g>
+      <g fill="#cbd5e1"><circle cx="500" cy="62" r="9"/><circle cx="450" cy="104" r="9"/><circle cx="560" cy="104" r="9"/><circle cx="530" cy="148" r="9"/></g>
+      <circle cx="595" cy="148" r="10" fill="#e11d48"/><text x="595" y="152" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">✕</text>
+      <text x="500" y="185" text-anchor="middle" font-size="9" fill="#64748b">path length ≈ 2 → 이상 점수 높음</text>
+
+      <!-- formula -->
+      <rect x="120" y="238" width="420" height="30" rx="6" fill="#ecfeff" stroke="#0891b2"/>
+      <text x="330" y="257" text-anchor="middle" font-size="9.5" fill="#155e75">anomaly score = 2^(−E[path length] / c(n)) &nbsp; · &nbsp; 1에 가까울수록 이상, 0.5 근처면 정상</text>
+    </svg>
+    <div class="sc">여러 트리의 평균 경로 길이가 짧은 샘플 = 쉽게 고립 = 이상. 트리 앙상블이라 학습·판정 빠름</div>
+  </div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">🐍 isolation_forest.py — 학습 & 임계</div>
+    <pre><code>import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
+
+# 다차원 특징 (2개 넘어도 됨) — 정상 데이터
+X = normal_df[["rms","peak","crest_factor","kurtosis","dom_freq"]].to_numpy()
+scaler = StandardScaler().fit(X)
+Xs = scaler.transform(X)
+
+iso = IsolationForest(
+    n_estimators=200,        # 트리 개수(많을수록 안정)
+    contamination=0.02,      # 예상 이상치 비율 → 자동 임계
+    max_samples="auto",      # 트리당 샘플 수(기본 256)
+    random_state=42,
+).fit(Xs)
+
+# score_samples: 낮을수록 이상. 하위 percentile을 임계로 고정
+scores = iso.score_samples(Xs)
+threshold = np.percentile(scores, 2)      # 하위 2% 기준
+
+def predict(features):
+    x = scaler.transform([features])
+    s = iso.score_samples(x)[0]
+    return {"is_anomaly": s < threshold, "score": float(s)}</code></pre>
+  </div>
+
+  <div class="sv">
+    <svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="600" height="220" fill="#f8fafc" rx="10"/>
+      <text x="300" y="24" text-anchor="middle" font-size="13" font-weight="bold" fill="#1e293b">이상 점수 분포 & 임계(contamination)</text>
+      <line x1="60" y1="170" x2="560" y2="170" stroke="#334155" stroke-width="1.4"/>
+      <line x1="60" y1="170" x2="60" y2="44" stroke="#334155" stroke-width="1.4"/>
+      <text x="310" y="196" text-anchor="middle" font-size="9" fill="#334155">← 이상(낮은 score) &nbsp;&nbsp; anomaly score &nbsp;&nbsp; 정상(높은 score) →</text>
+      <text x="40" y="110" text-anchor="middle" font-size="9" fill="#334155" transform="rotate(-90 40 110)">빈도</text>
+      <!-- histogram bars: anomalies left (red small), normal right (cyan big) -->
+      <g>
+        <rect x="88" y="150" width="20" height="20" fill="#fecaca"/>
+        <rect x="110" y="142" width="20" height="28" fill="#fecaca"/>
+        <rect x="132" y="150" width="20" height="20" fill="#fca5a5"/>
+        <rect x="168" y="128" width="20" height="42" fill="#a5f3fc"/>
+        <rect x="190" y="104" width="20" height="66" fill="#67e8f9"/>
+        <rect x="212" y="80" width="20" height="90" fill="#22d3ee"/>
+        <rect x="234" y="66" width="20" height="104" fill="#06b6d4"/>
+        <rect x="256" y="58" width="20" height="112" fill="#06b6d4"/>
+        <rect x="278" y="66" width="20" height="104" fill="#22d3ee"/>
+        <rect x="300" y="82" width="20" height="88" fill="#22d3ee"/>
+        <rect x="322" y="104" width="20" height="66" fill="#67e8f9"/>
+        <rect x="344" y="130" width="20" height="40" fill="#a5f3fc"/>
+      </g>
+      <!-- threshold line -->
+      <line x1="158" y1="44" x2="158" y2="178" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,3"/>
+      <text x="158" y="40" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="bold">임계 (하위 2%)</text>
+      <text x="118" y="210" text-anchor="middle" font-size="8.5" fill="#991b1b">← 이상 판정</text>
+      <text x="330" y="210" text-anchor="middle" font-size="8.5" fill="#155e75">정상 판정 →</text>
+    </svg>
+    <div class="sc">contamination이 임계선의 위치를 정함 — 하위 n%를 이상으로 컷</div>
+  </div>
+</section>
+
+<!-- ══ 9. COMPARE ══ -->
+<section id="compare" class="card">
+  <span class="chip cs">Compare</span>
+  <div class="card-title">One-Class SVM(직사각형) vs Isolation Forest</div>
+
+  <div class="tw">
+    <table>
+      <tr><th>항목</th><th>One-Class SVM + 직사각형</th><th>Isolation Forest</th></tr>
+      <tr><td>차원(특징 수)</td><td>2D(시각화·해석 목적)</td><td class="tg">다차원(여러 특징 동시)</td></tr>
+      <tr><td>결과물</td><td class="tg">사람이 읽는 임계치 4개</td><td>anomaly score(블랙박스)</td></tr>
+      <tr><td>해석성</td><td class="tg">매우 높음(상·하한)</td><td class="tb">낮음(왜 이상인지 불명확)</td></tr>
+      <tr><td>운영 비용</td><td class="tg">비교 4번(초경량)</td><td>트리 앙상블 추론 필요</td></tr>
+      <tr><td>비선형·복합 패턴</td><td>제한적(사각형 근사)</td><td class="tg">잘 잡음</td></tr>
+      <tr><td>스케일 민감도</td><td class="tb">높음(스케일링 필수)</td><td>상대적으로 둔감</td></tr>
+      <tr><td>학습 속도</td><td>데이터 많으면 느려짐(O(n²)~)</td><td class="tg">빠름·대용량 강함</td></tr>
+      <tr><td>적합 상황</td><td>핵심 2지표 알람·현장 배포</td><td>전체 특징 종합 감시</td></tr>
+    </table>
+  </div>
+
+  <div class="al al-t"><strong>추천 조합(하이브리드):</strong> 현장에 노출하는 <strong>핵심 2지표는 직사각형 임계치</strong>(설명 가능·조정 가능)로, 놓칠 수 있는 <strong>복합·다차원 이상은 Isolation Forest</strong>로 이중 감시. 둘 중 하나라도 걸리면 알람 → 해석성과 민감도를 동시에 확보.</div>
+</section>
+
+<!-- ══ 10. Q&A ══ -->
+<section id="qa" class="card">
+  <span class="chip cs">Q&amp;A</span>
+  <div class="card-title">면접 · 실무 Q&amp;A</div>
+
+  <div class="qa-item">
+    <div class="qq">Q. 왜 One-Class SVM의 곡선 경계를 그대로 안 쓰고 직사각형으로 바꿨나?</div>
+    <div class="qa">곡선 경계는 정확하지만 블랙박스라 현장에서 신뢰·조정이 어렵고 배포가 번거로움. 직사각형은 각 특징의 상·하한이라 <b>해석 가능</b>하고, 운영은 숫자 4개 비교로 끝나 <b>PLC·엣지까지 이식</b>이 쉬움. 정확도 일부를 내주고 해석성·운영성을 얻는 트레이드오프.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. One-Class SVM에서 nu는 정확히 무엇인가?</div>
+    <div class="qa">(0,1] 값으로, <b>학습 데이터 중 경계 밖으로 허용되는 비율의 상한</b>이자 <b>서포트벡터 비율의 하한</b>. 클수록 경계가 조여져(정상으로 보는 영역이 좁아져) 임계치 사각형이 작아지고 과경보가 늘 수 있음. 예상 이상치 비율에서 시작해 튜닝.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. 스케일링을 왜 반드시 하나?</div>
+    <div class="qa">RBF 커널은 점 사이 거리를 쓰는데, 특징 단위가 다르면(예: RMS 0~10 vs 에너지 0~10000) 큰 축이 거리를 지배해 경계가 왜곡됨. <code>StandardScaler</code>로 정규화하고, 임계치는 원래 단위로 역변환해 저장.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. 직사각형이 놓치는 이상은 어떻게 보완하나?</div>
+    <div class="qa">① 두 특징 상관이 크면 <b>PCA로 축 회전</b> 후 사각형(회전 박스 효과) ② 곡선 경계나 <b>Isolation Forest 병행</b>으로 다차원·비선형 이상 커버 ③ 모서리 위험 구간은 마진을 안쪽으로 좁힘.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. Isolation Forest의 핵심 원리는?</div>
+    <div class="qa">특징을 랜덤하게 분할해 트리를 만들면 <b>이상치는 적은 분할로 고립</b>(path length 짧음)됨. 여러 트리의 평균 경로 길이를 점수화 → 짧을수록 이상. 밀도 추정 없이 "고립 난이도"로 이상을 잡아 빠르고 대용량에 강함.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. contamination은 무슨 역할인가?</div>
+    <div class="qa">예상 이상치 비율. 이 값으로 score 분포에서 <b>임계선(컷)</b>이 정해짐. 실제 이상 비율을 모르면 보수적으로 낮게 잡고, 운영하며 오탐/미탐 보고 조정.</div>
+  </div>
+  <div class="qa-item">
+    <div class="qq">Q. 정상 데이터만으로 학습하는 게 왜 현실적인가?</div>
+    <div class="qa">설비 결함 데이터(라벨)는 드물고 비쌈. 반면 정상 운전 데이터는 넘침. 그래서 <b>정상만 학습해 "정상에서 벗어남"을 이상</b>으로 보는 비지도(one-class) 접근이 PdM에서 실용적.</div>
+  </div>
+</section>
+
+<p style="text-align:center;color:#94a3b8;font-size:.8rem;margin:20px 0 40px">One-Class SVM 직사각형 임계치 & Isolation Forest · 함께 보기: 09_pdm/03_anomaly/ml.md · 09_pdm/03_anomaly/ml.md의 특징공학</p>
+
+</div>
+</body>
+</html>

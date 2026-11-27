@@ -1,0 +1,52 @@
+<svg width="520" height="310" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="ah2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#555"/>
+    </marker>
+  </defs>
+
+  <rect width="520" height="310" fill="#f9fafb" rx="10"/>
+
+  <!-- Title -->
+  <text x="260" y="24" text-anchor="middle" font-size="15" font-weight="bold" fill="#1f2937">Bias-Variance Tradeoff</text>
+
+  <!-- Region backgrounds -->
+  <!-- Underfitting: x=70 to 175 -->
+  <rect x="70" y="35" width="105" height="230" fill="#fef9c3" opacity="0.7" rx="4"/>
+  <!-- Sweet spot: x=175 to 275 -->
+  <rect x="175" y="35" width="100" height="230" fill="#dcfce7" opacity="0.7" rx="4"/>
+  <!-- Overfitting: x=275 to 455 -->
+  <rect x="275" y="35" width="180" height="230" fill="#fee2e2" opacity="0.7" rx="4"/>
+
+  <!-- Region labels -->
+  <text x="122" y="52" text-anchor="middle" font-size="10" font-weight="bold" fill="#a16207">Underfitting</text>
+  <text x="122" y="64" text-anchor="middle" font-size="10" fill="#a16207">High Bias</text>
+  <text x="225" y="52" text-anchor="middle" font-size="10" font-weight="bold" fill="#15803d">Sweet Spot</text>
+  <text x="365" y="52" text-anchor="middle" font-size="10" font-weight="bold" fill="#b91c1c">Overfitting</text>
+  <text x="365" y="64" text-anchor="middle" font-size="10" fill="#b91c1c">High Variance</text>
+
+  <!-- Training error curve (blue, decreasing) -->
+  <path d="M 70,235 C 160,220 300,150 455,90" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Validation error curve (red, U-shaped) -->
+  <path d="M 70,240 C 110,185 165,120 225,115 C 285,110 370,155 455,238" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Optimal point -->
+  <line x1="225" y1="35" x2="225" y2="265" stroke="#15803d" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <circle cx="225" cy="115" r="6" fill="none" stroke="#15803d" stroke-width="2"/>
+  <text x="235" y="113" font-size="10" fill="#15803d" font-weight="bold">최적</text>
+
+  <!-- Axes -->
+  <line x1="70" y1="265" x2="462" y2="265" stroke="#555" stroke-width="1.5" marker-end="url(#ah2)"/>
+  <line x1="70" y1="265" x2="70" y2="30" stroke="#555" stroke-width="1.5" marker-end="url(#ah2)"/>
+
+  <!-- Axis labels -->
+  <text x="265" y="283" text-anchor="middle" font-size="12" fill="#374151" font-weight="bold">Model Complexity →</text>
+  <text x="18" y="150" text-anchor="middle" font-size="12" fill="#374151" font-weight="bold" transform="rotate(-90,18,150)">Error</text>
+
+  <!-- Legend -->
+  <line x1="90" y1="295" x2="118" y2="295" stroke="#3b82f6" stroke-width="2.5"/>
+  <text x="122" y="299" font-size="11" fill="#3b82f6">Train Error (Bias²)</text>
+  <line x1="260" y1="295" x2="288" y2="295" stroke="#ef4444" stroke-width="2.5"/>
+  <text x="292" y="299" font-size="11" fill="#ef4444">Validation Error (Bias²+Variance)</text>
+</svg>

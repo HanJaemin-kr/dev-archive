@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OPC UA 완전 가이드</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,sans-serif;background:#f1f5f9;color:#1e293b;line-height:1.65}
+
+/* ─── Hero ─── */
+.hero{background:linear-gradient(135deg,#0c1445 0%,#1e3a8a 55%,#1d4ed8 100%);color:#fff;padding:56px 48px 48px}
+.hero-tag{font-size:.72rem;letter-spacing:2.5px;text-transform:uppercase;color:#93c5fd;margin-bottom:14px}
+.hero h1{font-size:2.8rem;font-weight:800;margin-bottom:6px;letter-spacing:-.5px}
+.hero-sub{font-size:1rem;opacity:.75;margin-bottom:22px;max-width:620px}
+.badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:20px;padding:4px 14px;font-size:.78rem;margin:3px}
+
+/* ─── Nav ─── */
+.nav{position:sticky;top:0;z-index:50;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 40px;display:flex;gap:0;overflow-x:auto}
+.nav a{padding:13px 15px;text-decoration:none;color:#64748b;font-size:.82rem;font-weight:600;white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.nav a:hover{color:#1d4ed8;border-bottom-color:#1d4ed8}
+
+/* ─── Container ─── */
+.container{max-width:1080px;margin:0 auto;padding:40px 24px}
+
+/* ─── Card ─── */
+.card{background:#fff;border-radius:14px;padding:36px;margin-bottom:30px;box-shadow:0 1px 4px rgba(0,0,0,.07)}
+.card-title{font-size:1.35rem;font-weight:700;color:#1e40af;margin-bottom:4px}
+.card-desc{font-size:.88rem;color:#64748b;margin-bottom:24px}
+
+/* ─── Chip ─── */
+.chip{display:inline-block;font-size:.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:3px 10px;border-radius:4px;margin-bottom:12px}
+.cb{background:#dbeafe;color:#1d4ed8}.cg{background:#d1fae5;color:#065f46}
+.cp{background:#ede9fe;color:#5b21b6}.co{background:#fef3c7;color:#92400e}
+.cr{background:#fee2e2;color:#991b1b}
+
+/* ─── Grid ─── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:18px 0}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:18px 0}
+.gi{background:#f8fafc;border-radius:9px;padding:18px;border-left:3px solid #3b82f6}
+.gi h4{font-size:.92rem;color:#1e40af;margin-bottom:6px}
+.gi p{font-size:.82rem;color:#475569}
+
+/* ─── Table ─── */
+.tw{overflow-x:auto;margin:18px 0}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{background:#1e40af;color:#fff;padding:10px 14px;text-align:left;font-weight:600}
+td{padding:10px 14px;border-bottom:1px solid #e2e8f0;vertical-align:top}
+tr:last-child td{border-bottom:none}
+tr:nth-child(even) td{background:#f8fafc}
+.tg{color:#16a34a;font-weight:700}.tb{color:#dc2626;font-weight:700}
+.ty{color:#ca8a04;font-weight:700}
+
+/* ─── Code ─── */
+.cb-wrap{background:#0f172a;border-radius:10px;overflow:hidden;margin:18px 0}
+.cb-head{background:#1e293b;padding:8px 18px;font-size:.7rem;color:#94a3b8;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:8px}
+.cb-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+pre{padding:20px;overflow-x:auto;font-size:.78rem;line-height:1.7;color:#e2e8f0}
+code{font-family:'Cascadia Code','Fira Code','Consolas',monospace}
+
+/* ─── Alert ─── */
+.al{padding:13px 18px;border-radius:8px;margin:14px 0;font-size:.88rem}
+.al-i{background:#eff6ff;border-left:4px solid #3b82f6;color:#1e40af}
+.al-t{background:#f0fdf4;border-left:4px solid #22c55e;color:#14532d}
+.al-w{background:#fefce8;border-left:4px solid #eab308;color:#713f12}
+
+/* ─── SVG ─── */
+.sv{text-align:center;margin:24px 0;overflow-x:auto}
+.sv svg{max-width:100%;height:auto}
+.sc{font-size:.78rem;color:#94a3b8;margin-top:8px;font-style:italic}
+
+/* ─── QA ─── */
+.qa{margin-bottom:18px}
+.qq{background:#eff6ff;border-left:4px solid #3b82f6;padding:12px 16px;border-radius:4px 8px 0 0;font-weight:700;color:#1e40af;font-size:.88rem}
+.qa{background:#f8fafc;border:1px solid #e2e8f0;border-top:none;padding:12px 16px;border-radius:0 0 8px 8px;font-size:.88rem}
+
+/* ─── Spec badges ─── */
+.spec-grid{display:flex;flex-wrap:wrap;gap:12px;margin:16px 0}
+.spec-card{background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:14px 18px;min-width:180px}
+.spec-card h5{font-size:.85rem;color:#1e40af;margin-bottom:4px}
+.spec-card p{font-size:.78rem;color:#64748b}
+
+@media(max-width:680px){.g2,.g3{grid-template-columns:1fr}.hero{padding:36px 24px}.hero h1{font-size:2rem}}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════ HERO ═══════════════════════════════════ -->
+<header class="hero">
+  <div class="hero-tag">Industrial IoT · IEC 62541</div>
+  <h1>OPC UA</h1>
+  <p class="hero-sub">OPC Unified Architecture — 산업 자동화를 위한 국제 표준 통신 프로토콜.<br>PLC·인버터·센서 등 이기종 설비를 하나의 표준으로 연결합니다.</p>
+  <div>
+    <span class="badge">IEC 62541</span>
+    <span class="badge">OPC Foundation</span>
+    <span class="badge">플랫폼 독립</span>
+    <span class="badge">보안 내장 (TLS)</span>
+    <span class="badge">실시간 구독</span>
+    <span class="badge">포트 4840</span>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════ NAV ════════════════════════════════════ -->
+<nav class="nav">
+  <a href="#overview">개요</a>
+  <a href="#info-model">정보 모델</a>
+  <a href="#address-space">주소 공간</a>
+  <a href="#communication">통신 방식</a>
+  <a href="#security">보안</a>
+  <a href="#architecture">시스템 구성</a>
+  <a href="#comparison">프로토콜 비교</a>
+  <a href="#code">Python 구현</a>
+  <a href="#companion">Companion Spec</a>
+  <a href="#qa">면접 Q&amp;A</a>
+</nav>
+
+<div class="container">
+
+<!-- ════════════════════════════════════ 1. OVERVIEW ════════════════════════════════════ -->
+<section id="overview" class="card">
+  <span class="chip cb">Overview</span>
+  <div class="card-title">OPC UA란?</div>
+  <div class="card-desc">산업 자동화에서 이기종 장비·시스템 간의 안전하고 신뢰할 수 있는 데이터 교환을 위한 국제 표준 (OPC Classic의 후계, 2006년~)</div>
+
+  <div class="g3">
+    <div class="gi"><h4>📦 표준화된 데이터 모델</h4><p>설비 정보를 노드(Node)와 주소 공간(Address Space)으로 구조화. 공통 언어로 이기종 장비 연동.</p></div>
+    <div class="gi"><h4>🔒 보안 내장</h4><p>TLS 암호화 + X.509 인증서 기반 인증·권한 관리가 프로토콜에 기본 내장. 별도 보안 구성 불필요.</p></div>
+    <div class="gi"><h4>🌐 플랫폼 독립</h4><p>Windows·Linux·임베디드 MCU까지 동작. C/C++, Python, Java, .NET 등 다양한 SDK 제공.</p></div>
+    <div class="gi"><h4>📡 실시간 구독</h4><p>Subscription + MonitoredItem으로 값 변경 시 자동 알림. Polling 없이 효율적인 데이터 수집.</p></div>
+    <div class="gi"><h4>🕰️ 이력 조회</h4><p>Historical Access — 과거 데이터를 시간 범위로 직접 요청. 별도 DB 없이 서버에서 이력 제공 가능.</p></div>
+    <div class="gi"><h4>⚙️ 원격 제어</h4><p>Method Call — 서버의 함수를 원격 실행. 펌프 Start/Stop, 설정값 변경 등 양방향 제어 가능.</p></div>
+  </div>
+
+  <!-- SVG 1: Architecture Stack -->
+  <div class="sv">
+    <svg width="560" height="390" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="560" height="390" fill="#f8fafc" rx="12"/>
+      <text x="280" y="28" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">OPC UA 아키텍처 스택</text>
+
+      <!-- Application: Client -->
+      <rect x="18" y="44" width="242" height="72" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="139" y="68" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">OPC UA Client</text>
+      <text x="139" y="86" text-anchor="middle" font-size="10" fill="#2563eb">ERP · SCADA · MES · Python App</text>
+      <text x="139" y="103" text-anchor="middle" font-size="10" fill="#3b82f6">Read · Write · Subscribe · Browse</text>
+
+      <!-- Bidirectional arrow -->
+      <line x1="262" y1="80" x2="298" y2="80" stroke="#6366f1" stroke-width="2.5"/>
+      <polygon points="262,76 262,84 254,80" fill="#6366f1"/>
+      <polygon points="298,76 298,84 306,80" fill="#6366f1"/>
+
+      <!-- Application: Server -->
+      <rect x="302" y="44" width="240" height="72" rx="8" fill="#fce7f3" stroke="#ec4899" stroke-width="1.5"/>
+      <text x="422" y="68" text-anchor="middle" font-size="12" font-weight="bold" fill="#9d174d">OPC UA Server</text>
+      <text x="422" y="86" text-anchor="middle" font-size="10" fill="#be185d">PLC · 인버터 · 센서 · Python 서버</text>
+      <text x="422" y="103" text-anchor="middle" font-size="10" fill="#ec4899">Address Space · 실시간 데이터 노출</text>
+
+      <!-- Services Layer -->
+      <rect x="18" y="130" width="524" height="58" rx="8" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="280" y="152" text-anchor="middle" font-size="12" font-weight="bold" fill="#5b21b6">Services Layer</text>
+      <line x1="157" y1="140" x2="157" y2="183" stroke="#c4b5fd" stroke-width="1"/>
+      <line x1="280" y1="140" x2="280" y2="183" stroke="#c4b5fd" stroke-width="1"/>
+      <line x1="403" y1="140" x2="403" y2="183" stroke="#c4b5fd" stroke-width="1"/>
+      <text x="87"  y="174" text-anchor="middle" font-size="10" fill="#6d28d9">Session 관리</text>
+      <text x="218" y="174" text-anchor="middle" font-size="10" fill="#6d28d9">Node 관리</text>
+      <text x="341" y="174" text-anchor="middle" font-size="10" fill="#6d28d9">Subscription</text>
+      <text x="481" y="174" text-anchor="middle" font-size="10" fill="#6d28d9">Historical Access</text>
+
+      <!-- Information Model -->
+      <rect x="18" y="202" width="255" height="52" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="145" y="223" text-anchor="middle" font-size="12" font-weight="bold" fill="#065f46">Information Model</text>
+      <text x="145" y="242" text-anchor="middle" font-size="10" fill="#047857">Object · Variable · Method · Reference</text>
+
+      <!-- Security -->
+      <rect x="287" y="202" width="255" height="52" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="414" y="223" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400e">Security</text>
+      <text x="414" y="242" text-anchor="middle" font-size="10" fill="#b45309">TLS 암호화 · X.509 인증서 · 권한 관리</text>
+
+      <!-- Transport Layer -->
+      <rect x="18" y="268" width="524" height="58" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+      <text x="280" y="290" text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">Transport Layer</text>
+      <line x1="200" y1="278" x2="200" y2="320" stroke="#cbd5e1" stroke-width="1"/>
+      <line x1="370" y1="278" x2="370" y2="320" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="108" y="313" text-anchor="middle" font-size="10" fill="#475569">UA Binary / TCP (기본)</text>
+      <text x="284" y="313" text-anchor="middle" font-size="10" fill="#475569">UA XML / HTTPS</text>
+      <text x="463" y="313" text-anchor="middle" font-size="10" fill="#475569">UA PubSub / MQTT·UDP</text>
+
+      <!-- Standard bar -->
+      <rect x="18" y="340" width="524" height="38" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+      <text x="280" y="358" text-anchor="middle" font-size="11" font-weight="bold" fill="#15803d">IEC 62541 국제 표준 · OPC Foundation</text>
+      <text x="280" y="372" text-anchor="middle" font-size="10" fill="#16a34a">Windows / Linux / Embedded · 기본 포트 4840</text>
+    </svg>
+    <div class="sc">OPC UA 아키텍처 — 클라이언트/서버 구조 위에 서비스·보안·전송 계층이 쌓임</div>
+  </div>
+
+  <div class="al al-i">
+    <strong>OPC Classic vs OPC UA</strong><br>
+    OPC Classic은 Windows DCOM 기반으로 Windows에서만 동작. OPC UA는 플랫폼 독립적이며 보안·데이터 모델·실시간 구독이 하나의 표준으로 통합. 현재 모든 신규 산업 시스템은 OPC UA를 채택.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 2. INFORMATION MODEL ════════════════════════════════════ -->
+<section id="info-model" class="card">
+  <span class="chip cg">Information Model</span>
+  <div class="card-title">정보 모델 — 노드 타입</div>
+  <div class="card-desc">OPC UA 서버의 모든 데이터는 노드(Node)로 표현됩니다. 노드 타입에 따라 역할이 다릅니다.</div>
+
+  <!-- SVG 2: Node Types -->
+  <div class="sv">
+    <svg width="600" height="175" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="600" height="175" fill="#f8fafc" rx="10"/>
+
+      <!-- Object -->
+      <rect x="8"   y="12" width="110" height="150" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <rect x="28"  y="28" width="70" height="50" rx="6" fill="#3b82f6" opacity=".15"/>
+      <rect x="35"  y="35" width="56" height="8" rx="3" fill="#3b82f6" opacity=".5"/>
+      <rect x="35"  y="47" width="40" height="8" rx="3" fill="#3b82f6" opacity=".3"/>
+      <rect x="35"  y="59" width="48" height="8" rx="3" fill="#3b82f6" opacity=".3"/>
+      <text x="63"  y="96"  text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">Object</text>
+      <text x="63"  y="113" text-anchor="middle" font-size="9"  fill="#3b82f6">설비/시스템</text>
+      <text x="63"  y="126" text-anchor="middle" font-size="9"  fill="#3b82f6">단위를 표현</text>
+      <text x="63"  y="148" text-anchor="middle" font-size="9"  fill="#64748b" font-style="italic">Pump01, Line1</text>
+
+      <!-- Variable -->
+      <rect x="126" y="12" width="110" height="150" rx="8" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <circle cx="181" cy="53" r="22" fill="#059669" opacity=".15" stroke="#059669" stroke-width="1.5"/>
+      <text x="181" y="58"  text-anchor="middle" font-size="16" fill="#059669" font-weight="bold">val</text>
+      <text x="181" y="96"  text-anchor="middle" font-size="12" font-weight="bold" fill="#065f46">Variable</text>
+      <text x="181" y="113" text-anchor="middle" font-size="9"  fill="#059669">실제 측정값</text>
+      <text x="181" y="126" text-anchor="middle" font-size="9"  fill="#059669">읽기/쓰기/구독</text>
+      <text x="181" y="148" text-anchor="middle" font-size="9"  fill="#64748b" font-style="italic">VibRMS, Temp</text>
+
+      <!-- Method -->
+      <rect x="244" y="12" width="110" height="150" rx="8" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <polygon points="279,32 279,72 309,52" fill="#f59e0b" opacity=".4"/>
+      <polygon points="281,36 281,68 307,52" fill="#f59e0b" opacity=".8"/>
+      <text x="299" y="96"  text-anchor="middle" font-size="12" font-weight="bold" fill="#92400e">Method</text>
+      <text x="299" y="113" text-anchor="middle" font-size="9"  fill="#b45309">원격 실행</text>
+      <text x="299" y="126" text-anchor="middle" font-size="9"  fill="#b45309">가능한 함수</text>
+      <text x="299" y="148" text-anchor="middle" font-size="9"  fill="#64748b" font-style="italic">Start(), Stop()</text>
+
+      <!-- ObjectType -->
+      <rect x="362" y="12" width="110" height="150" rx="8" fill="#f8fafc" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <rect x="382" y="28" width="70" height="50" rx="6" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <rect x="389" y="35" width="56" height="8" rx="3" fill="#93c5fd" opacity=".5"/>
+      <rect x="389" y="47" width="40" height="8" rx="3" fill="#93c5fd" opacity=".3"/>
+      <text x="417" y="96"  text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">ObjectType</text>
+      <text x="417" y="113" text-anchor="middle" font-size="9"  fill="#3b82f6">Object의</text>
+      <text x="417" y="126" text-anchor="middle" font-size="9"  fill="#3b82f6">클래스 정의</text>
+      <text x="417" y="148" text-anchor="middle" font-size="9"  fill="#64748b" font-style="italic">PumpType</text>
+
+      <!-- Reference -->
+      <rect x="480" y="12" width="112" height="150" rx="8" fill="#f1f5f9" stroke="#64748b" stroke-width="1.5"/>
+      <line x1="500" y1="53" x2="572" y2="53" stroke="#64748b" stroke-width="2"/>
+      <polygon points="567,47 567,59 579,53" fill="#64748b"/>
+      <text x="536" y="96"  text-anchor="middle" font-size="12" font-weight="bold" fill="#334155">Reference</text>
+      <text x="536" y="113" text-anchor="middle" font-size="9"  fill="#475569">노드 간</text>
+      <text x="536" y="126" text-anchor="middle" font-size="9"  fill="#475569">관계 정의</text>
+      <text x="536" y="148" text-anchor="middle" font-size="9"  fill="#64748b" font-style="italic">HasComponent</text>
+    </svg>
+    <div class="sc">OPC UA 5가지 핵심 노드 타입 — Object와 Variable이 가장 자주 사용됨</div>
+  </div>
+
+  <div class="tw">
+    <table>
+      <tr><th>노드 타입</th><th>역할</th><th>주요 속성</th><th>예시</th></tr>
+      <tr><td><strong style="color:#1d4ed8">Object</strong></td><td>설비·시스템·폴더를 나타내는 컨테이너</td><td>NodeId, BrowseName, DisplayName</td><td>Line1, Pump01, Specifications</td></tr>
+      <tr><td><strong style="color:#065f46">Variable</strong></td><td>실제 측정값·설정값 (읽기/쓰기/구독 가능)</td><td>Value, DataType, AccessLevel</td><td>VibrationRMS, Temperature, RPM</td></tr>
+      <tr><td><strong style="color:#92400e">Method</strong></td><td>원격으로 실행 가능한 함수</td><td>InputArguments, OutputArguments</td><td>Start(rpm), Stop(), Reset()</td></tr>
+      <tr><td><strong style="color:#1d4ed8">ObjectType</strong></td><td>Object의 클래스 정의 (템플릿)</td><td>IsAbstract</td><td>PumpType, MotorType</td></tr>
+      <tr><td><strong style="color:#334155">Reference</strong></td><td>노드 간 관계 (부모-자식, 타입 등)</td><td>ReferenceTypeId, IsForward</td><td>HasComponent, HasProperty</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 3. ADDRESS SPACE ════════════════════════════════════ -->
+<section id="address-space" class="card">
+  <span class="chip cb">Address Space</span>
+  <div class="card-title">주소 공간 (Address Space)</div>
+  <div class="card-desc">OPC UA 서버는 모든 데이터를 계층적 노드 트리로 구성합니다. NodeId로 각 노드를 고유 식별합니다.</div>
+
+  <!-- SVG 3: Address Space Tree -->
+  <div class="sv">
+    <svg width="640" height="400" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="640" height="400" fill="#f8fafc" rx="10"/>
+
+      <!-- ── Vertical chain ── -->
+      <!-- Root -->
+      <rect x="20" y="18" width="150" height="34" rx="6" fill="#e0e7ff" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="95" y="37" text-anchor="middle" font-size="11" font-weight="bold" fill="#4338ca">Root</text>
+      <text x="95" y="48" text-anchor="middle" font-size="9"  fill="#6366f1">ns=0;i=84</text>
+
+      <!-- Objects -->
+      <rect x="20" y="76" width="150" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="95" y="95" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">Objects</text>
+      <text x="95" y="106" text-anchor="middle" font-size="9"  fill="#3b82f6">ns=0;i=85</text>
+
+      <!-- Line1 -->
+      <rect x="20" y="134" width="150" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="95" y="153" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">Line1</text>
+      <text x="95" y="164" text-anchor="middle" font-size="9"  fill="#3b82f6">ns=2;s=Line1</text>
+
+      <!-- Pump01 -->
+      <rect x="20" y="192" width="150" height="34" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="95" y="211" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">Pump01</text>
+      <text x="95" y="222" text-anchor="middle" font-size="9"  fill="#3b82f6">ns=2;s=Line1.Pump01</text>
+
+      <!-- Vertical connectors -->
+      <line x1="95" y1="52" x2="95" y2="76" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="95" y1="110" x2="95" y2="134" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="95" y1="168" x2="95" y2="192" stroke="#94a3b8" stroke-width="1.5"/>
+
+      <!-- Branch from Pump01 right → vertical bus at x=210 -->
+      <line x1="170" y1="209" x2="210" y2="209" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="210" y1="100" x2="210" y2="312" stroke="#94a3b8" stroke-width="1.5"/>
+
+      <!-- ── Children of Pump01 ── -->
+      <!-- VibrationRMS (Variable) -->
+      <line x1="210" y1="107" x2="220" y2="107" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="220" y="92" width="165" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="302" y="111" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">VibrationRMS</text>
+
+      <!-- Temperature (Variable) -->
+      <line x1="210" y1="155" x2="220" y2="155" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="220" y="140" width="165" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="302" y="159" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">Temperature</text>
+
+      <!-- RPM (Variable) -->
+      <line x1="210" y1="203" x2="220" y2="203" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="220" y="188" width="165" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="302" y="207" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">RPM</text>
+
+      <!-- Start() (Method) -->
+      <line x1="210" y1="251" x2="220" y2="251" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="220" y="236" width="165" height="30" rx="6" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="302" y="255" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">Start(rpm)</text>
+
+      <!-- Specifications (Object) -->
+      <line x1="210" y1="297" x2="220" y2="297" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="220" y="282" width="165" height="30" rx="6" fill="#dbeafe" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="302" y="301" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">Specifications</text>
+
+      <!-- Type labels (right of children) -->
+      <text x="395" y="111" font-size="9" fill="#059669" font-style="italic">Variable (Float)</text>
+      <text x="395" y="159" font-size="9" fill="#059669" font-style="italic">Variable (Float)</text>
+      <text x="395" y="207" font-size="9" fill="#059669" font-style="italic">Variable (Int32)</text>
+      <text x="395" y="255" font-size="9" fill="#b45309" font-style="italic">Method</text>
+      <text x="395" y="301" font-size="9" fill="#3b82f6" font-style="italic">Object</text>
+
+      <!-- Branch from Specifications → sub-children -->
+      <line x1="385" y1="297" x2="430" y2="297" stroke="#94a3b8" stroke-width="1.5"/>
+      <line x1="430" y1="255" x2="430" y2="370" stroke="#94a3b8" stroke-width="1.5"/>
+
+      <!-- Specs children -->
+      <line x1="430" y1="260" x2="440" y2="260" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="440" y="245" width="175" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="527" y="264" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">Manufacturer</text>
+
+      <line x1="430" y1="305" x2="440" y2="305" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="440" y="290" width="175" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="527" y="309" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">MaxRPM</text>
+
+      <line x1="430" y1="355" x2="440" y2="355" stroke="#94a3b8" stroke-width="1.5"/>
+      <rect x="440" y="340" width="175" height="30" rx="6" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="527" y="359" text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">SerialNumber</text>
+
+      <!-- Legend -->
+      <rect x="20" y="350" width="185" height="38" rx="6" fill="white" stroke="#e2e8f0" stroke-width="1"/>
+      <rect x="28" y="360" width="12" height="12" rx="2" fill="#dbeafe" stroke="#3b82f6" stroke-width="1"/>
+      <text x="44" y="370" font-size="9" fill="#1d4ed8">Object</text>
+      <rect x="80" y="360" width="12" height="12" rx="2" fill="#d1fae5" stroke="#059669" stroke-width="1"/>
+      <text x="96" y="370" font-size="9" fill="#065f46">Variable</text>
+      <rect x="138" y="360" width="12" height="12" rx="2" fill="#fef3c7" stroke="#f59e0b" stroke-width="1"/>
+      <text x="154" y="370" font-size="9" fill="#92400e">Method</text>
+      <text x="30" y="382" font-size="8" fill="#94a3b8">ns=2 → 서버 정의 Namespace</text>
+    </svg>
+    <div class="sc">OPC UA 주소 공간 예시 — Pump01이라는 설비의 실제 노드 구조</div>
+  </div>
+
+  <div class="g2">
+    <div>
+      <strong>NodeId 형식</strong>
+      <div class="cb-wrap" style="margin-top:8px">
+        <div class="cb-head">NodeId 예시</div>
+        <pre><code>ns=2;i=1001          # 숫자 ID
+ns=2;s=Pump01.RMS    # 문자열 ID
+ns=2;g=550e8400-...  # GUID
+
+ns = Namespace Index
+  0 : OPC UA 표준 노드
+  1+: 서버 정의 사용자 노드</code></pre>
+      </div>
+    </div>
+    <div>
+      <strong>Python으로 노드 탐색</strong>
+      <div class="cb-wrap" style="margin-top:8px">
+        <div class="cb-head">browse_address_space.py</div>
+        <pre><code>async def browse(client, node=None, indent=0):
+    if node is None:
+        node = client.get_root_node()
+    for child in await node.get_children():
+        name = await child.read_browse_name()
+        print("  "*indent + f"{name.Name} [{child.nodeid}]")
+        await browse(client, child, indent+1)</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 4. COMMUNICATION ════════════════════════════════════ -->
+<section id="communication" class="card">
+  <span class="chip cp">Communication</span>
+  <div class="card-title">4가지 통신 방식</div>
+  <div class="card-desc">OPC UA는 단순 읽기부터 실시간 구독, 원격 제어까지 하나의 프로토콜로 지원합니다.</div>
+
+  <!-- SVG 4: 4-panel Communication -->
+  <div class="sv">
+    <svg width="580" height="460" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="580" height="460" fill="#f8fafc" rx="10"/>
+      <text x="290" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">OPC UA 통신 방식</text>
+
+      <!-- ── Panel 1: Read ── -->
+      <rect x="10" y="42" width="270" height="196" rx="8" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.5"/>
+      <text x="145" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#1d4ed8">1. Read — 일회성 읽기</text>
+      <!-- lifelines -->
+      <line x1="65"  y1="85" x2="65"  y2="222" stroke="#93c5fd" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="250" y1="85" x2="250" y2="222" stroke="#93c5fd" stroke-width="1" stroke-dasharray="3,3"/>
+      <!-- boxes -->
+      <rect x="25"  y="70" width="80" height="26" rx="5" fill="#3b82f6"/>
+      <text x="65"  y="87" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Client</text>
+      <rect x="210" y="70" width="80" height="26" rx="5" fill="#7c3aed"/>
+      <text x="250" y="87" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Server</text>
+      <!-- request -->
+      <line x1="65" y1="130" x2="242" y2="130" stroke="#3b82f6" stroke-width="2"/>
+      <polygon points="242,125 242,135 252,130" fill="#3b82f6"/>
+      <text x="155" y="124" text-anchor="middle" font-size="9" fill="#1d4ed8">Read(NodeId)</text>
+      <!-- response -->
+      <line x1="250" y1="168" x2="73"  y2="168" stroke="#059669" stroke-width="2"/>
+      <polygon points="73,163 73,173 63,168" fill="#059669"/>
+      <text x="155" y="162" text-anchor="middle" font-size="9" fill="#065f46">Value + Timestamp</text>
+      <text x="145" y="210" text-anchor="middle" font-size="9" fill="#64748b" font-style="italic">폴링·단발성 값 확인에 적합</text>
+
+      <!-- ── Panel 2: Write ── -->
+      <rect x="300" y="42" width="270" height="196" rx="8" fill="#fdf4ff" stroke="#a855f7" stroke-width="1.5"/>
+      <text x="435" y="62" text-anchor="middle" font-size="12" font-weight="bold" fill="#7c3aed">2. Write — 값 쓰기</text>
+      <line x1="355" y1="85" x2="355" y2="222" stroke="#d8b4fe" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="540" y1="85" x2="540" y2="222" stroke="#d8b4fe" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="315" y="70" width="80" height="26" rx="5" fill="#7c3aed"/>
+      <text x="355" y="87" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Client</text>
+      <rect x="500" y="70" width="80" height="26" rx="5" fill="#7c3aed"/>
+      <text x="540" y="87" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Server</text>
+      <line x1="355" y1="130" x2="532" y2="130" stroke="#7c3aed" stroke-width="2"/>
+      <polygon points="532,125 532,135 542,130" fill="#7c3aed"/>
+      <text x="435" y="122" text-anchor="middle" font-size="9" fill="#7c3aed">Write(NodeId, Value)</text>
+      <line x1="540" y1="168" x2="363" y2="168" stroke="#059669" stroke-width="2"/>
+      <polygon points="363,163 363,173 353,168" fill="#059669"/>
+      <text x="435" y="162" text-anchor="middle" font-size="9" fill="#065f46">OK / StatusCode</text>
+      <text x="435" y="210" text-anchor="middle" font-size="9" fill="#64748b" font-style="italic">설정값 변경·원격 제어 입력</text>
+
+      <!-- ── Panel 3: Subscribe ── -->
+      <rect x="10" y="252" width="270" height="198" rx="8" fill="#f0fdf4" stroke="#22c55e" stroke-width="1.5"/>
+      <text x="145" y="272" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">3. Subscribe — 자동 수신</text>
+      <line x1="65"  y1="295" x2="65"  y2="436" stroke="#86efac" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="250" y1="295" x2="250" y2="436" stroke="#86efac" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="25"  y="280" width="80" height="26" rx="5" fill="#16a34a"/>
+      <text x="65"  y="297" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Client</text>
+      <rect x="210" y="280" width="80" height="26" rx="5" fill="#16a34a"/>
+      <text x="250" y="297" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Server</text>
+      <!-- CreateSub -->
+      <line x1="65" y1="320" x2="242" y2="320" stroke="#16a34a" stroke-width="1.5"/>
+      <polygon points="242,315 242,325 252,320" fill="#16a34a"/>
+      <text x="155" y="314" text-anchor="middle" font-size="8.5" fill="#15803d">CreateSubscription(period)</text>
+      <!-- SubId back -->
+      <line x1="250" y1="340" x2="73"  y2="340" stroke="#059669" stroke-width="1.5"/>
+      <polygon points="73,335 73,345 63,340" fill="#059669"/>
+      <text x="155" y="334" text-anchor="middle" font-size="8.5" fill="#065f46">SubId</text>
+      <!-- AddMonitoredItem -->
+      <line x1="65" y1="360" x2="242" y2="360" stroke="#16a34a" stroke-width="1.5"/>
+      <polygon points="242,355 242,365 252,360" fill="#16a34a"/>
+      <text x="155" y="354" text-anchor="middle" font-size="8.5" fill="#15803d">AddMonitoredItem(NodeId)</text>
+      <!-- Notification -->
+      <line x1="250" y1="388" x2="73"  y2="388" stroke="#dc2626" stroke-width="2"/>
+      <polygon points="73,383 73,393 63,388" fill="#dc2626"/>
+      <text x="155" y="382" text-anchor="middle" font-size="8.5" fill="#dc2626">Notification (값 변경 시)</text>
+      <text x="145" y="430" text-anchor="middle" font-size="9" fill="#64748b" font-style="italic">핵심 패턴 — Polling 없이 실시간</text>
+
+      <!-- ── Panel 4: Method Call ── -->
+      <rect x="300" y="252" width="270" height="198" rx="8" fill="#fff7ed" stroke="#f97316" stroke-width="1.5"/>
+      <text x="435" y="272" text-anchor="middle" font-size="12" font-weight="bold" fill="#c2410c">4. Method — 원격 실행</text>
+      <line x1="355" y1="295" x2="355" y2="436" stroke="#fed7aa" stroke-width="1" stroke-dasharray="3,3"/>
+      <line x1="540" y1="295" x2="540" y2="436" stroke="#fed7aa" stroke-width="1" stroke-dasharray="3,3"/>
+      <rect x="315" y="280" width="80" height="26" rx="5" fill="#ea580c"/>
+      <text x="355" y="297" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Client</text>
+      <rect x="500" y="280" width="80" height="26" rx="5" fill="#ea580c"/>
+      <text x="540" y="297" text-anchor="middle" font-size="10" fill="white" font-weight="bold">Server</text>
+      <line x1="355" y1="330" x2="532" y2="330" stroke="#ea580c" stroke-width="2"/>
+      <polygon points="532,325 532,335 542,330" fill="#ea580c"/>
+      <text x="435" y="322" text-anchor="middle" font-size="9" fill="#c2410c">Call(MethodId, args)</text>
+      <!-- executing -->
+      <rect x="500" y="342" width="80" height="22" rx="4" fill="#fed7aa"/>
+      <text x="540" y="357" text-anchor="middle" font-size="8.5" fill="#92400e">실행 중...</text>
+      <!-- result -->
+      <line x1="540" y1="385" x2="363" y2="385" stroke="#059669" stroke-width="2"/>
+      <polygon points="363,380 363,390 353,385" fill="#059669"/>
+      <text x="435" y="379" text-anchor="middle" font-size="9" fill="#065f46">Result / OutputArgs</text>
+      <text x="435" y="430" text-anchor="middle" font-size="9" fill="#64748b" font-style="italic">Start(rpm) · Stop() · Reset()</text>
+    </svg>
+    <div class="sc">OPC UA 4가지 서비스 — 단순 읽기부터 실시간 구독, 원격 실행까지 단일 프로토콜로 지원</div>
+  </div>
+
+  <div class="al al-t">
+    <strong>💡 Subscribe가 핵심 패턴</strong><br>
+    Read는 요청 시점의 값만 가져옴. Subscribe는 서버가 값 변경을 감지해 자동 통보 → Polling 부하 없이 실시간 데이터 수집 가능. 대부분의 실제 모니터링 시스템은 Subscribe 방식을 사용.
+  </div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">📡 Subscribe 핵심 패턴 (Python)</div>
+    <pre><code>from asyncua import Client
+from asyncua.common.subscription import SubHandler
+
+class SensorHandler(SubHandler):
+    def datachange_notification(self, node, val, data):
+        ts = data.monitored_item.Value.SourceTimestamp
+        print(f"[{ts}] {node} = {val}")   # 값 변경 시 자동 호출
+
+async def main():
+    async with Client("opc.tcp://plc:4840") as client:
+        handler = SensorHandler()
+        sub = await client.create_subscription(period=500, handler=handler)
+        nodes = [client.get_node("ns=2;s=Line1.Pump01.VibrationRMS")]
+        await sub.subscribe_data_change(nodes)
+        await asyncio.sleep(float("inf"))   # 연결 유지</code></pre>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 5. SECURITY ════════════════════════════════════ -->
+<section id="security" class="card">
+  <span class="chip co">Security</span>
+  <div class="card-title">보안 (Security)</div>
+  <div class="card-desc">OPC UA는 3단계 보안 모드를 표준으로 정의. 개발 환경과 운영 환경에 따라 적절히 선택.</div>
+
+  <!-- SVG 5: Security Tiers -->
+  <div class="sv">
+    <svg width="560" height="260" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="560" height="260" fill="#f8fafc" rx="10"/>
+      <text x="280" y="26" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e293b">OPC UA 보안 모드</text>
+
+      <!-- None -->
+      <rect x="15" y="85" width="160" height="130" rx="8" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="95"  y="110" text-anchor="middle" font-size="13" font-weight="bold" fill="#64748b">None</text>
+      <circle cx="95" cy="142" r="18" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1.5"/>
+      <text x="95" cy="142" text-anchor="middle" font-size="18" fill="#94a3b8" y="149">🔓</text>
+      <text x="95" y="175" text-anchor="middle" font-size="10" fill="#94a3b8">암호화 없음</text>
+      <text x="95" y="190" text-anchor="middle" font-size="10" fill="#94a3b8">인증 없음</text>
+      <text x="95" y="207" text-anchor="middle" font-size="9" fill="#dc2626" font-weight="bold">개발·테스트 전용</text>
+
+      <!-- Sign -->
+      <rect x="200" y="55" width="160" height="160" rx="8" fill="#fefce8" stroke="#ca8a04" stroke-width="2"/>
+      <text x="280" y="80" text-anchor="middle" font-size="13" font-weight="bold" fill="#a16207">Sign</text>
+      <circle cx="280" cy="114" r="18" fill="#fef3c7" stroke="#ca8a04" stroke-width="1.5"/>
+      <text x="280" cy="114" text-anchor="middle" font-size="18" fill="#ca8a04" y="121">🔐</text>
+      <text x="280" y="147" text-anchor="middle" font-size="10" fill="#a16207">디지털 서명</text>
+      <text x="280" y="162" text-anchor="middle" font-size="10" fill="#a16207">무결성 보장</text>
+      <text x="280" y="177" text-anchor="middle" font-size="10" fill="#a16207">위변조 감지 가능</text>
+      <text x="280" y="200" text-anchor="middle" font-size="9" fill="#a16207" font-weight="bold">내부망 권장</text>
+
+      <!-- SignAndEncrypt -->
+      <rect x="385" y="30" width="160" height="185" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="2.5"/>
+      <text x="465" y="55" text-anchor="middle" font-size="12" font-weight="bold" fill="#15803d">SignAndEncrypt</text>
+      <circle cx="465" cy="93" r="18" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+      <text x="465" cy="93" text-anchor="middle" font-size="18" fill="#16a34a" y="100">🔒</text>
+      <text x="465" y="126" text-anchor="middle" font-size="10" fill="#15803d">서명 + TLS 암호화</text>
+      <text x="465" y="141" text-anchor="middle" font-size="10" fill="#15803d">X.509 인증서</text>
+      <text x="465" y="156" text-anchor="middle" font-size="10" fill="#15803d">도청 방지</text>
+      <text x="465" y="171" text-anchor="middle" font-size="10" fill="#15803d">신원 검증</text>
+      <text x="465" y="200" text-anchor="middle" font-size="9" fill="#15803d" font-weight="bold">운영 환경 필수</text>
+
+      <!-- Arrow / progression -->
+      <line x1="175" y1="240" x2="540" y2="240" stroke="#94a3b8" stroke-width="1.5"/>
+      <polygon points="535,235 535,245 545,240" fill="#94a3b8"/>
+      <text x="360" y="256" text-anchor="middle" font-size="9" fill="#64748b">보안 강도 →</text>
+    </svg>
+    <div class="sc">3단계 보안 모드 — 운영 환경에서는 반드시 SignAndEncrypt 사용</div>
+  </div>
+
+  <div class="g2">
+    <div class="cb-wrap">
+      <div class="cb-head">🔒 SignAndEncrypt 연결 (Python)</div>
+      <pre><code>from asyncua.crypto.security_policies import SecurityPolicyBasic256Sha256
+from asyncua import ua, Client
+
+async def secure_connect():
+    client = Client("opc.tcp://plc:4840")
+    await client.set_security(
+        SecurityPolicyBasic256Sha256,
+        certificate="client_cert.pem",
+        private_key="client_key.pem",
+        server_certificate="server_cert.pem",
+        mode=ua.MessageSecurityMode.SignAndEncrypt,
+    )
+    await client.connect()</code></pre>
+    </div>
+    <div>
+      <strong>보안 정책 종류</strong>
+      <div class="tw" style="margin-top:10px">
+        <table>
+          <tr><th>정책</th><th>알고리즘</th></tr>
+          <tr><td>Basic128Rsa15</td><td class="tb">취약 (사용 금지)</td></tr>
+          <tr><td>Basic256</td><td class="ty">레거시</td></tr>
+          <tr><td><strong>Basic256Sha256</strong></td><td class="tg">권장 ✓</td></tr>
+          <tr><td><strong>Aes128Sha256RsaOaep</strong></td><td class="tg">최신 권장 ✓</td></tr>
+          <tr><td>Aes256Sha256RsaPss</td><td class="tg">최고 강도 ✓</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 6. SYSTEM ARCHITECTURE ════════════════════════════════════ -->
+<section id="architecture" class="card">
+  <span class="chip cr">Architecture</span>
+  <div class="card-title">실제 시스템 구성</div>
+  <div class="card-desc">현장 설비(OPC UA 서버) → Python 수집기 → 저장·분석 파이프라인의 전형적 구성입니다.</div>
+
+  <!-- SVG 6: System Architecture -->
+  <div class="sv">
+    <svg width="660" height="300" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',Arial,sans-serif">
+      <rect width="660" height="300" fill="#f8fafc" rx="10"/>
+
+      <!-- Equipment column -->
+      <text x="90" y="22" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b">현장 설비</text>
+      <rect x="10" y="52" width="155" height="48" rx="7" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="87" y="72" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">PLC (지멘스 S7)</text>
+      <text x="87" y="88" text-anchor="middle" font-size="9"  fill="#dc2626">OPC UA Server 내장</text>
+
+      <rect x="10" y="115" width="155" height="48" rx="7" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="87" y="135" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">인버터 (ABB)</text>
+      <text x="87" y="151" text-anchor="middle" font-size="9"  fill="#dc2626">OPC UA Server 내장</text>
+
+      <rect x="10" y="178" width="155" height="48" rx="7" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="87" y="198" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">진동계측기</text>
+      <text x="87" y="214" text-anchor="middle" font-size="9"  fill="#dc2626">OPC UA Server 내장</text>
+
+      <!-- OPC UA arrows to collector -->
+      <line x1="165" y1="76"  x2="215" y2="118" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="4,2"/>
+      <polygon points="211,113 215,122 220,113" fill="#3b82f6"/>
+      <line x1="165" y1="139" x2="215" y2="139" stroke="#3b82f6" stroke-width="1.8"/>
+      <polygon points="211,134 215,143 219,134" fill="#3b82f6"/>
+      <line x1="165" y1="202" x2="215" y2="160" stroke="#3b82f6" stroke-width="1.8" stroke-dasharray="4,2"/>
+      <polygon points="211,156 215,165 220,156" fill="#3b82f6"/>
+      <text x="188" y="105" text-anchor="middle" font-size="8" fill="#3b82f6" font-weight="bold">OPC UA</text>
+      <text x="188" y="115" text-anchor="middle" font-size="8" fill="#3b82f6">Subscribe</text>
+
+      <!-- Collector box -->
+      <text x="295" y="22" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b">수집·변환</text>
+      <rect x="220" y="90" width="155" height="100" rx="8" fill="#dbeafe" stroke="#3b82f6" stroke-width="2"/>
+      <text x="297" y="116" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">Python</text>
+      <text x="297" y="131" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d4ed8">Collector</text>
+      <text x="297" y="150" text-anchor="middle" font-size="9"  fill="#3b82f6">Subscribe 수신</text>
+      <text x="297" y="163" text-anchor="middle" font-size="9"  fill="#3b82f6">파싱 · 검증 · 라우팅</text>
+      <text x="297" y="178" text-anchor="middle" font-size="9"  fill="#3b82f6">asyncua · asyncio</text>
+
+      <!-- Arrows to storage -->
+      <line x1="375" y1="116" x2="430" y2="78"  stroke="#94a3b8" stroke-width="1.8"/>
+      <polygon points="426,73 434,79 424,84" fill="#94a3b8"/>
+      <line x1="375" y1="130" x2="430" y2="130" stroke="#94a3b8" stroke-width="1.8"/>
+      <polygon points="426,125 434,130 426,135" fill="#94a3b8"/>
+      <line x1="375" y1="148" x2="430" y2="182" stroke="#94a3b8" stroke-width="1.8"/>
+      <polygon points="426,177 430,186 435,177" fill="#94a3b8"/>
+      <line x1="375" y1="162" x2="430" y2="235" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4,2"/>
+      <polygon points="426,230 430,239 435,230" fill="#94a3b8"/>
+
+      <!-- Storage column -->
+      <text x="535" y="22" text-anchor="middle" font-size="11" font-weight="bold" fill="#64748b">저장 · 분석</text>
+      <rect x="432" y="52"  width="210" height="40" rx="7" fill="#d1fae5" stroke="#059669" stroke-width="1.5"/>
+      <text x="537" y="72"  text-anchor="middle" font-size="11" font-weight="bold" fill="#065f46">InfluxDB</text>
+      <text x="537" y="85"  text-anchor="middle" font-size="9"  fill="#059669">시계열 데이터 저장</text>
+
+      <rect x="432" y="108" width="210" height="40" rx="7" fill="#fee2e2" stroke="#ef4444" stroke-width="1.5"/>
+      <text x="537" y="128" text-anchor="middle" font-size="11" font-weight="bold" fill="#991b1b">Redis</text>
+      <text x="537" y="141" text-anchor="middle" font-size="9"  fill="#dc2626">최신값 캐시 (실시간 API)</text>
+
+      <rect x="432" y="163" width="210" height="40" rx="7" fill="#ede9fe" stroke="#7c3aed" stroke-width="1.5"/>
+      <text x="537" y="183" text-anchor="middle" font-size="11" font-weight="bold" fill="#5b21b6">MQTT Broker</text>
+      <text x="537" y="196" text-anchor="middle" font-size="9"  fill="#7c3aed">하류 파이프라인 · 대시보드</text>
+
+      <rect x="432" y="218" width="210" height="40" rx="7" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5,3"/>
+      <text x="537" y="238" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e">AAS Server</text>
+      <text x="537" y="251" text-anchor="middle" font-size="9"  fill="#b45309">디지털 트윈 (Asset Admin Shell)</text>
+
+      <!-- Bottom label -->
+      <text x="330" y="282" text-anchor="middle" font-size="9" fill="#94a3b8" font-style="italic">설비 OPC UA → Python 브리지 → MQTT·DB·AAS 파이프라인</text>
+    </svg>
+    <div class="sc">현장 배포 아키텍처 — OPC UA를 MQTT 파이프라인과 연동하는 전형적 패턴</div>
+  </div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">🔗 OPC UA → MQTT 브리지 패턴</div>
+    <pre><code>import asyncio, json
+import paho.mqtt.client as mqtt
+from asyncua import Client
+from asyncua.common.subscription import SubHandler
+
+NODE_TOPIC_MAP = {
+    "ns=2;s=Line1.Pump01.VibrationRMS": "pdm/line1/pump/pump_01/vibration",
+    "ns=2;s=Line1.Pump01.Temperature":  "pdm/line1/pump/pump_01/temperature",
+    "ns=2;s=Line1.Motor03.RPM":         "pdm/line1/motor/motor_03/rpm",
+}
+
+class BridgeHandler(SubHandler):
+    def __init__(self, mqtt_client):
+        self.mqtt = mqtt_client
+
+    def datachange_notification(self, node, val, data):
+        topic = NODE_TOPIC_MAP.get(str(node.nodeid))
+        if topic:
+            payload = json.dumps({
+                "value": val,
+                "timestamp": data.monitored_item.Value.SourceTimestamp.isoformat(),
+            })
+            self.mqtt.publish(topic, payload, qos=1)
+
+async def bridge():
+    mc = mqtt.Client(); mc.connect("mosquitto", 1883); mc.loop_start()
+    async with Client("opc.tcp://plc-line1:4840") as client:
+        sub = await client.create_subscription(500, BridgeHandler(mc))
+        await sub.subscribe_data_change([client.get_node(n) for n in NODE_TOPIC_MAP])
+        await asyncio.sleep(float("inf"))</code></pre>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 7. COMPARISON ════════════════════════════════════ -->
+<section id="comparison" class="card">
+  <span class="chip cb">Comparison</span>
+  <div class="card-title">프로토콜 비교</div>
+  <div class="card-desc">OPC UA · MQTT · Modbus · PROFIBUS 용도와 특성 비교</div>
+
+  <div class="tw">
+    <table>
+      <tr>
+        <th>항목</th>
+        <th>OPC UA</th>
+        <th>MQTT</th>
+        <th>Modbus</th>
+        <th>PROFIBUS</th>
+      </tr>
+      <tr>
+        <td><strong>계층</strong></td>
+        <td>응용 계층</td>
+        <td>응용 계층</td>
+        <td>응용/전송</td>
+        <td>필드버스</td>
+      </tr>
+      <tr>
+        <td><strong>표준</strong></td>
+        <td class="tg">IEC 62541</td>
+        <td>ISO/IEC 20922</td>
+        <td>사실상 표준</td>
+        <td>IEC 61784</td>
+      </tr>
+      <tr>
+        <td><strong>데이터 모델</strong></td>
+        <td class="tg">구조화 (Address Space)</td>
+        <td>비구조화 (토픽 자유)</td>
+        <td>레지스터 맵</td>
+        <td>GSD 파일</td>
+      </tr>
+      <tr>
+        <td><strong>보안</strong></td>
+        <td class="tg">기본 내장 (TLS + 인증서)</td>
+        <td>별도 구성 필요</td>
+        <td class="tb">없음</td>
+        <td class="tb">없음</td>
+      </tr>
+      <tr>
+        <td><strong>실시간성</strong></td>
+        <td class="tg">구독 기반 실시간</td>
+        <td class="tg">구독 기반 실시간</td>
+        <td class="ty">폴링 방식</td>
+        <td class="tg">하드 실시간</td>
+      </tr>
+      <tr>
+        <td><strong>원격 제어</strong></td>
+        <td class="tg">Method Call ✓</td>
+        <td>발행만 가능</td>
+        <td class="tg">Write ✓</td>
+        <td class="tg">지원 ✓</td>
+      </tr>
+      <tr>
+        <td><strong>이력 조회</strong></td>
+        <td class="tg">Historical Access 내장</td>
+        <td class="tb">없음 (별도 DB)</td>
+        <td class="tb">없음</td>
+        <td class="tb">없음</td>
+      </tr>
+      <tr>
+        <td><strong>플랫폼</strong></td>
+        <td class="tg">완전 독립</td>
+        <td class="tg">완전 독립</td>
+        <td class="tg">독립</td>
+        <td class="ty">전용 하드웨어</td>
+      </tr>
+      <tr>
+        <td><strong>주 사용처</strong></td>
+        <td>PLC·SCADA·MES 연동</td>
+        <td>IoT 센서·클라우드</td>
+        <td>레거시 산업 장비</td>
+        <td>공장 자동화 현장</td>
+      </tr>
+      <tr>
+        <td><strong>적합 환경</strong></td>
+        <td class="tg">산업 표준 연동 필요 시</td>
+        <td class="tg">경량 IoT·클라우드</td>
+        <td class="ty">레거시 유지보수</td>
+        <td class="ty">하드 실시간 필요 시</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="al al-t">
+    <strong>현장 선택 기준</strong><br>
+    장비가 OPC UA 서버를 내장하고 있다면 → <strong>OPC UA 직접 연결</strong>이 가장 정확하고 표준적.<br>
+    경량 IoT 센서·클라우드 파이프라인 → <strong>MQTT</strong>.<br>
+    레거시 PLC 연동 → <strong>Modbus → OPC UA Gateway</strong>로 변환 후 상위 시스템 연결.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 8. PYTHON CODE ════════════════════════════════════ -->
+<section id="code" class="card">
+  <span class="chip cg">Python</span>
+  <div class="card-title">Python 구현 (asyncua)</div>
+  <div class="card-desc">pip install asyncua — OPC UA asyncio 기반 클라이언트/서버 라이브러리</div>
+
+  <div class="g2">
+    <div class="cb-wrap">
+      <div class="cb-head">📖 값 읽기</div>
+      <pre><code>from asyncua import Client
+
+async def read_values():
+    async with Client("opc.tcp://192.168.1.50:4840") as c:
+        # NodeId로 직접 읽기
+        node = c.get_node("ns=2;s=Line1.Pump01.VibrationRMS")
+        val  = await node.read_value()
+        print(f"RMS: {val}")
+
+        # 경로로 탐색
+        root  = c.get_root_node()
+        pump  = await root.get_child(
+            ["0:Objects","2:Line1","2:Pump01"])
+        temp  = await pump.get_child("2:Temperature")
+        print(await temp.read_value())</code></pre>
+    </div>
+    <div class="cb-wrap">
+      <div class="cb-head">⚙️ Method 호출</div>
+      <pre><code>async def control_pump(client, pump_id, rpm):
+    pump = client.get_node(f"ns=2;s=Line1.{pump_id}")
+
+    # Start — 목표 RPM 전달
+    result = await pump.call_method(
+        "2:Start", rpm
+    )
+    print(f"Start result: {result}")
+
+    # Stop
+    await pump.call_method("2:Stop")
+
+    # 쓰기 (설정값 변경)
+    sp = client.get_node("ns=2;s=Pump01.SetpointRPM")
+    await sp.write_value(1800)</code></pre>
+    </div>
+  </div>
+
+  <div class="g2">
+    <div class="cb-wrap">
+      <div class="cb-head">🕰️ 이력 조회 (Historical Access)</div>
+      <pre><code>from asyncua import ua
+from datetime import datetime, timedelta, timezone
+
+async def read_history(client):
+    node  = client.get_node("ns=2;s=Pump01.VibrationRMS")
+    end   = datetime.now(timezone.utc)
+    start = end - timedelta(hours=1)
+
+    history = await node.read_raw_history(
+        starttime=start,
+        endtime=end,
+        numvalues=0,      # 0 = 제한 없음
+    )
+    for dv in history:
+        print(f"{dv.SourceTimestamp}: {dv.Value.Value}")</code></pre>
+    </div>
+    <div class="cb-wrap">
+      <div class="cb-head">🖥️ OPC UA 서버 구축</div>
+      <pre><code>from asyncua import Server
+import asyncio
+
+async def run_server():
+    server = Server()
+    await server.init()
+    server.set_endpoint("opc.tcp://0.0.0.0:4840/pdm/")
+    ns     = await server.register_namespace("urn:pdm")
+    objs   = server.get_objects_node()
+    pump   = await objs.add_object(ns, "Pump01")
+    rms    = await pump.add_variable(ns, "VibrationRMS", 0.0)
+    await rms.set_writable()
+
+    async with server:
+        while True:
+            await rms.write_value(read_sensor())  # 실센서 값 업데이트
+            await asyncio.sleep(1)</code></pre>
+    </div>
+  </div>
+
+  <div class="cb-wrap">
+    <div class="cb-head">🚨 주요 에러 대응</div>
+    <pre><code># BadNodeIdUnknown  → UaExpert로 실제 NodeId 확인 후 수정
+# BadSecurityChecksFailed → 인증서 재발급 또는 None 모드로 테스트
+# BadTooManySubscriptions → 서버 maxSubscriptionsPerSession 설정 증가
+# BadConnectionClosed → on_disconnect 핸들러에서 재연결 로직 추가
+
+async def connect_with_retry(url, max_retry=5):
+    for i in range(max_retry):
+        try:
+            client = Client(url)
+            await client.connect()
+            return client
+        except Exception as e:
+            print(f"Retry {i+1}: {e}")
+            await asyncio.sleep(2 ** i)   # 지수 백오프</code></pre>
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 9. COMPANION SPEC ════════════════════════════════════ -->
+<section id="companion" class="card">
+  <span class="chip cp">Companion Spec</span>
+  <div class="card-title">Companion Specification</div>
+  <div class="card-desc">산업별 표준 노드 구조를 미리 정의한 확장 규격. 직접 데이터 모델 설계 없이 표준 구조 사용 가능.</div>
+
+  <div class="spec-grid">
+    <div class="spec-card"><h5>OPC UA for Machinery</h5><p>일반 기계 설비 공통 구조. 식별정보·운전이력·상태 표준화.</p></div>
+    <div class="spec-card"><h5>OPC UA for Pumps</h5><p>펌프 특화. 유량·압력·효율·알람 노드 표준 정의.</p></div>
+    <div class="spec-card"><h5>OPC UA for Drives</h5><p>인버터·서보 드라이브. 속도·토크·전류 구조.</p></div>
+    <div class="spec-card"><h5>OPC UA for CNC</h5><p>CNC 공작기계. 축 위치·이송속도·공구 정보.</p></div>
+    <div class="spec-card"><h5>OPC UA for Robotics</h5><p>산업용 로봇 암. 조인트·엔드이펙터·태스크.</p></div>
+    <div class="spec-card"><h5>PLCopen OPC UA</h5><p>PLC 프로그래밍 표준과 연계. 태스크·프로그램·변수 노출.</p></div>
+  </div>
+
+  <div class="al al-i">
+    <strong>OPC UA + AAS (Asset Administration Shell)</strong><br>
+    OPC UA 노드와 AAS SubModel을 1:1 매핑하는 <em>Asset Interfaces Description (IDTA-02017)</em> 표준 존재.
+    OPC UA로 실시간 데이터를 수집하고, AAS REST API로 외부 시스템(ERP·SCM·클라우드)에 디지털 트윈 노출하는 패턴이 Industry 4.0 레퍼런스 아키텍처.
+  </div>
+</section>
+
+<!-- ════════════════════════════════════ 10. Q&A ════════════════════════════════════ -->
+<section id="qa" class="card">
+  <span class="chip cb">Interview Q&amp;A</span>
+  <div class="card-title">면접·현장 핵심 Q&amp;A</div>
+
+  <div class="qa">
+    <div class="qq">OPC UA와 MQTT의 가장 큰 차이는?</div>
+    <div class="qa">OPC UA는 구조화된 Address Space(정보 모델)를 제공하여 설비 데이터를 계층적으로 표현하고, 읽기·쓰기·구독·메서드 호출을 하나의 표준으로 지원. 보안도 프로토콜에 내장. MQTT는 토픽 기반 경량 발행-구독으로 자유도는 높지만 데이터 구조·보안을 개발자가 직접 설계해야 함. 현장 PLC가 OPC UA를 지원하면 OPC UA 직접 연결이 더 정확하고 표준적. 클라우드·경량 IoT는 MQTT.</div>
+  </div>
+  <div class="qa">
+    <div class="qq">Subscribe와 Read의 차이, 언제 무엇을 쓰나?</div>
+    <div class="qa">Read는 요청 시점의 값만 가져오는 단발성 조회. Subscribe는 서버가 값 변경을 감지해 자동 통보 — Polling 부하 없이 실시간 수집 가능. 실시간 모니터링·알람에는 Subscribe, 초기 설정값 확인·단순 조회에는 Read 사용.</div>
+  </div>
+  <div class="qa">
+    <div class="qq">OPC UA 서버가 내장되지 않은 레거시 장비를 연동하려면?</div>
+    <div class="qa">① Modbus·PROFIBUS 등 기존 프로토콜로 데이터를 읽어 Python OPC UA 서버로 래핑하는 Gateway 구축. ② 상용 OPC UA Gateway 장비(Prosys, Kepware 등) 사용. Python asyncua로 서버를 만들고 레거시 드라이버와 연결하면 표준 OPC UA 클라이언트가 연결 가능.</div>
+  </div>
+  <div class="qa">
+    <div class="qq">NodeId가 무엇이고 왜 중요한가?</div>
+    <div class="qa">OPC UA 주소 공간의 각 노드를 고유 식별하는 주소. Namespace Index(ns)와 식별자(숫자·문자열·GUID) 조합. 클라이언트는 NodeId로 정확한 노드를 지정해 읽기·쓰기·구독을 수행하므로 NodeId 파악이 연동의 첫 단계. UaExpert(무료 GUI 도구)나 browse 코드로 서버의 NodeId를 탐색해 매핑 테이블 작성.</div>
+  </div>
+  <div class="qa">
+    <div class="qq">OPC UA 보안 설정 시 최소 요구사항은?</div>
+    <div class="qa">운영 환경에서 반드시 SecurityMode.SignAndEncrypt + Basic256Sha256 이상 정책 적용. 클라이언트와 서버 각각 X.509 인증서 발급, 상호 인증서 교환 필요. None 모드는 개발·내부 테스트 전용. 인증서 자동 갱신 스크립트와 만료 모니터링도 필수.</div>
+  </div>
+  <div class="qa">
+    <div class="qq">Subscription의 PublishingInterval과 SamplingInterval 차이는?</div>
+    <div class="qa">SamplingInterval: 서버가 노드 값을 얼마나 자주 샘플링할지 (ms 단위). PublishingInterval: 샘플링된 변경 내용을 클라이언트에게 얼마나 자주 전송할지. SamplingInterval ≤ PublishingInterval이어야 함. 예: Sampling=100ms, Publishing=1000ms → 1초에 한 번 묶어서 전송. 네트워크 부하와 실시간성의 트레이드오프.</div>
+  </div>
+  <div class="qa">
+    <div class="qq">Companion Specification을 왜 써야 하나?</div>
+    <div class="qa">OPC UA 노드 구조를 직접 설계하면 업체마다 다른 방식으로 데이터가 노출되어 이기종 툴과의 호환 불가. Companion Spec(예: OPC UA for Pumps)을 따르면 어떤 OPC UA 클라이언트나 SCADA도 표준 구조로 자동 인식. 데이터 모델 설계 비용 절감 + 상호운용성 보장.</div>
+  </div>
+</section>
+
+</div><!-- /container -->
+
+<footer style="text-align:center;padding:30px;font-size:.8rem;color:#94a3b8;background:#f1f5f9;border-top:1px solid #e2e8f0">
+  OPC UA 완전 가이드 · IEC 62541 · OPC Foundation · asyncua (Python)
+</footer>
+
+</body>
+</html>

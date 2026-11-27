@@ -1,0 +1,69 @@
+<svg viewBox="0 0 900 300" xmlns="http://www.w3.org/2000/svg" role="img" font-family="sans-serif">
+  <title>TabNet 전체 구조</title>
+  <desc>입력 피처가 배치 정규화 후 N개의 순차적 decision step을 거치고, 각 step의 출력이 합산되어 최종 예측이 되며, 각 step의 마스크가 피처 중요도로 집계된다.</desc>
+  <rect x="0" y="0" width="900" height="300" rx="14" fill="#faf9f6"/>
+
+  <!-- input -->
+  <rect x="20" y="120" width="80" height="60" rx="8" fill="#3b6ea5" opacity="0.12" stroke="#3b6ea5"/>
+  <text x="60" y="146" text-anchor="middle" font-size="12" font-weight="700" fill="#2b2823">입력</text>
+  <text x="60" y="163" text-anchor="middle" font-size="11" fill="#6b655c">피처 + BN</text>
+
+  <!-- steps -->
+  <g>
+    <rect x="140" y="115" width="120" height="70" rx="10" fill="#fff" stroke="#3b6ea5" stroke-width="1.5"/>
+    <text x="200" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#2b2823">Step 1</text>
+    <text x="200" y="157" text-anchor="middle" font-size="9.5" fill="#6b655c">Attentive +</text>
+    <text x="200" y="170" text-anchor="middle" font-size="9.5" fill="#6b655c">Feature Transformer</text>
+
+    <rect x="320" y="115" width="120" height="70" rx="10" fill="#fff" stroke="#3b6ea5" stroke-width="1.5"/>
+    <text x="380" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#2b2823">Step 2</text>
+    <text x="380" y="157" text-anchor="middle" font-size="9.5" fill="#6b655c">Attentive +</text>
+    <text x="380" y="170" text-anchor="middle" font-size="9.5" fill="#6b655c">Feature Transformer</text>
+
+    <rect x="500" y="115" width="120" height="70" rx="10" fill="#fff" stroke="#3b6ea5" stroke-width="1.5"/>
+    <text x="560" y="140" text-anchor="middle" font-size="12" font-weight="700" fill="#2b2823">Step N</text>
+    <text x="560" y="157" text-anchor="middle" font-size="9.5" fill="#6b655c">Attentive +</text>
+    <text x="560" y="170" text-anchor="middle" font-size="9.5" fill="#6b655c">Feature Transformer</text>
+  </g>
+
+  <!-- sequential arrows (prior passes forward) -->
+  <defs>
+    <marker id="tn" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#6b655c"/></marker>
+  </defs>
+  <g stroke="#6b655c" stroke-width="1.5" fill="none" marker-end="url(#tn)">
+    <path d="M100 150 L 138 150"/>
+    <path d="M260 150 L 318 150"/>
+    <path d="M440 150 L 460 150" stroke-dasharray="4 4"/>
+  </g>
+  <text x="470" y="146" font-size="12" fill="#6b655c">···</text>
+  <path d="M480 150 L 498 150" stroke="#6b655c" stroke-width="1.5" fill="none" marker-end="url(#tn)"/>
+  <text x="300" y="108" text-anchor="middle" font-size="10" fill="#6b655c">prior scale 전달 (이미 쓴 피처 억제)</text>
+
+  <!-- output contributions up -->
+  <g stroke="#3b6ea5" stroke-width="1.4" fill="none" marker-end="url(#tnb)">
+    <path d="M200 115 L 200 70 L 690 70"/>
+    <path d="M380 115 L 380 70"/>
+    <path d="M560 115 L 560 70"/>
+  </g>
+  <defs>
+    <marker id="tnb" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#3b6ea5"/></marker>
+  </defs>
+  <rect x="695" y="50" width="120" height="55" rx="8" fill="#3b6ea5" opacity="0.12" stroke="#3b6ea5"/>
+  <text x="755" y="72" text-anchor="middle" font-size="11" font-weight="700" fill="#2b2823">Σ 출력 합</text>
+  <text x="755" y="90" text-anchor="middle" font-size="10" fill="#6b655c">→ FC → 예측</text>
+
+  <!-- masks down to importance -->
+  <g stroke="#c2683f" stroke-width="1.4" fill="none" marker-end="url(#tno)">
+    <path d="M200 185 L 200 230 L 690 230"/>
+    <path d="M380 185 L 380 230"/>
+    <path d="M560 185 L 560 230"/>
+  </g>
+  <defs>
+    <marker id="tno" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#c2683f"/></marker>
+  </defs>
+  <rect x="695" y="205" width="120" height="55" rx="8" fill="#c2683f" opacity="0.12" stroke="#c2683f"/>
+  <text x="755" y="227" text-anchor="middle" font-size="11" font-weight="700" fill="#2b2823">마스크 집계</text>
+  <text x="755" y="245" text-anchor="middle" font-size="10" fill="#6b655c">→ 피처 중요도</text>
+
+  <text x="430" y="285" text-anchor="middle" font-size="11" fill="#6b655c">각 step은 sparsemax 마스크로 소수의 피처만 선택 → 해석 가능</text>
+</svg>

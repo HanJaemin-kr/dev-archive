@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 440" font-family="'Malgun Gothic','Segoe UI',sans-serif">
+  <defs>
+    <marker id="a3" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#333"/>
+    </marker>
+    <linearGradient id="hot" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ff5a1f"/>
+      <stop offset="100%" stop-color="#ffb060"/>
+    </linearGradient>
+  </defs>
+
+  <text x="300" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#222">압연기(4단 압연 스탠드) 개략도</text>
+
+  <!-- backup rolls (large) -->
+  <circle cx="300" cy="88"  r="52" fill="#c7ccd3" stroke="#333" stroke-width="2.5"/>
+  <circle cx="300" cy="352" r="52" fill="#c7ccd3" stroke="#333" stroke-width="2.5"/>
+  <!-- work rolls (smaller, actually press the strip) -->
+  <circle cx="300" cy="172" r="40" fill="#9aa0a8" stroke="#333" stroke-width="2.5"/>
+  <circle cx="300" cy="268" r="40" fill="#9aa0a8" stroke="#333" stroke-width="2.5"/>
+
+  <!-- strip: thick in, thin out (hot) -->
+  <polygon points="40,193 300,206 560,210 560,230 300,234 40,247" fill="url(#hot)" stroke="#c0392b" stroke-width="1.5"/>
+
+  <!-- rotation arrows on work rolls -->
+  <path d="M300,150 A22,22 0 0 1 322,172" fill="none" stroke="#c0392b" stroke-width="2.5" marker-end="url(#a3)"/>
+  <path d="M300,290 A22,22 0 0 1 278,268" fill="none" stroke="#c0392b" stroke-width="2.5" marker-end="url(#a3)"/>
+
+  <!-- direction of travel -->
+  <line x1="440" y1="220" x2="530" y2="220" stroke="#333" stroke-width="2" marker-end="url(#a3)"/>
+
+  <!-- labels -->
+  <line x1="352" y1="88"  x2="470" y2="70"  stroke="#333" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="474" y="67" font-size="12.5" fill="#333">백업롤(보강롤)</text>
+  <text x="474" y="82" font-size="11" fill="#777">작업롤 휨 방지</text>
+
+  <line x1="340" y1="172" x2="470" y2="150" stroke="#333" stroke-width="1.5" marker-end="url(#a3)"/>
+  <text x="474" y="147" font-size="12.5" fill="#333" font-weight="bold">작업롤(work roll)</text>
+  <text x="474" y="162" font-size="11" fill="#777">실제로 소재를 누름</text>
+
+  <text x="70" y="175" font-size="13" fill="#c0392b" font-weight="bold">두꺼운</text>
+  <text x="70" y="192" font-size="13" fill="#c0392b" font-weight="bold">슬래브</text>
+  <text x="70" y="270" text-anchor="start" font-size="11" fill="#555">← 소재 투입</text>
+
+  <text x="505" y="185" font-size="13" fill="#a86a00" font-weight="bold">얇은 강판</text>
+  <text x="505" y="245" font-size="11" fill="#555">진행방향 →</text>
+
+  <text x="300" y="415" text-anchor="middle" font-size="12" fill="#555">회전하는 롤 사이(nip)로 통과시켜 두께를 줄인다 = 압하(reduction)</text>
+  <text x="300" y="433" text-anchor="middle" font-size="11" fill="#888">뜨겁게 하여 누르면 열간압연, 상온에서 누르면 냉간압연</text>
+</svg>

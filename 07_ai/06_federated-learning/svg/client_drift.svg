@@ -1,0 +1,38 @@
+<svg viewBox="0 0 780 280" xmlns="http://www.w3.org/2000/svg" role="img" font-family="sans-serif">
+  <title>클라이언트 드리프트와 업데이트 충돌</title>
+  <desc>클라이언트별 로컬 업데이트의 방향과 크기가 제각각이면 평균 업데이트가 글로벌 최적 방향에서 벗어나고, 드리프트 보정 후에는 업데이트가 정렬되어 안정적으로 수렴한다.</desc>
+  <defs>
+    <marker id="arrow-gr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#8a8377"/></marker>
+    <marker id="arrow-rd" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#b3543a"/></marker>
+    <marker id="arrow-gn" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#4a7c59"/></marker>
+  </defs>
+  <rect x="0" y="0" width="780" height="280" rx="14" fill="#faf9f6"/>
+  <line x1="390" y1="40" x2="390" y2="235" stroke="#e0dbd2" stroke-width="1.5"/>
+
+  <!-- LEFT: drift -->
+  <text x="195" y="32" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2b2823">드리프트 · 업데이트 충돌</text>
+  <path d="M290,62 l4,10 11,1 -8,8 2,11 -9,-5 -10,5 2,-11 -8,-8 11,-1 z" fill="#c2683f"/>
+  <text x="322" y="72" font-size="10.5" fill="#c2683f">글로벌 최적점</text>
+  <circle cx="170" cy="195" r="6" fill="#2b2823"/>
+  <text x="150" y="218" font-size="11" fill="#2b2823">Wᵗ</text>
+  <line x1="170" y1="195" x2="80" y2="130" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="170" y1="195" x2="140" y2="90" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="170" y1="195" x2="255" y2="175" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="170" y1="195" x2="115" y2="230" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="170" y1="195" x2="150" y2="115" stroke="#b3543a" stroke-width="2.4" stroke-dasharray="6 4" marker-end="url(#arrow-rd)"/>
+  <text x="90" y="102" font-size="10.5" fill="#6b655c">로컬 업데이트 방향 제각각</text>
+  <text x="185" y="128" font-size="11" fill="#b3543a">평균 ΔW → 최적 방향 이탈</text>
+  <text x="195" y="260" text-anchor="middle" font-size="11" fill="#6b655c">서로 상쇄·충돌 → 수렴 불안정 (클라이언트 수 ↑ 일수록 심화)</text>
+
+  <!-- RIGHT: corrected -->
+  <text x="585" y="32" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2b2823">드리프트 보정 후 (FedProx · SCAFFOLD)</text>
+  <path d="M672,62 l4,10 11,1 -8,8 2,11 -9,-5 -10,5 2,-11 -8,-8 11,-1 z" fill="#c2683f"/>
+  <circle cx="540" cy="195" r="6" fill="#2b2823"/>
+  <text x="520" y="218" font-size="11" fill="#2b2823">Wᵗ</text>
+  <line x1="540" y1="195" x2="610" y2="115" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="540" y1="195" x2="630" y2="135" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="540" y1="195" x2="590" y2="105" stroke="#8a8377" stroke-width="1.6" marker-end="url(#arrow-gr)"/>
+  <line x1="540" y1="195" x2="648" y2="92" stroke="#4a7c59" stroke-width="2.4" marker-end="url(#arrow-gn)"/>
+  <text x="660" y="130" font-size="11" fill="#4a7c59">평균 ΔW가 최적 방향</text>
+  <text x="585" y="260" text-anchor="middle" font-size="11" fill="#6b655c">크기·방향 정렬 → 글로벌 모델 안정 수렴</text>
+</svg>

@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 640" font-family="'Malgun Gothic','Segoe UI',sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#333"/>
+    </marker>
+    <clipPath id="inner">
+      <path d="M268,120 C246,148 231,172 229,208 C226,256 208,286 208,325 C208,376 222,414 250,447 C272,474 288,490 300,492 C312,490 328,474 350,447 C378,414 392,376 392,325 C392,286 374,256 371,208 C369,172 354,148 332,120 Z"/>
+    </clipPath>
+  </defs>
+
+  <text x="300" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#222">전로(BOF · LD 전로) 단면도</text>
+
+  <!-- steel shell (outer) -->
+  <path d="M260,110 C235,140 215,165 213,205 C210,255 190,285 190,325 C190,380 205,420 235,455 C260,485 280,502 300,505 C320,502 340,485 365,455 C395,420 410,380 410,325 C410,285 390,255 387,205 C385,165 365,140 340,110 Z"
+        fill="#8a9099" stroke="#333" stroke-width="3"/>
+  <!-- refractory lining (inner) -->
+  <path d="M268,120 C246,148 231,172 229,208 C226,256 208,286 208,325 C208,376 222,414 250,447 C272,474 288,490 300,492 C312,490 328,474 350,447 C378,414 392,376 392,325 C392,286 374,256 371,208 C369,172 354,148 332,120 Z"
+        fill="#b5651d" stroke="#7a4a15" stroke-width="1.5"/>
+
+  <!-- molten steel + slag (clipped to lining) -->
+  <g clip-path="url(#inner)">
+    <rect x="200" y="360" width="200" height="140" fill="#ff8c1a"/>   <!-- molten steel/iron -->
+    <rect x="200" y="345" width="200" height="15"  fill="#5c4326"/>   <!-- slag -->
+  </g>
+
+  <!-- oxygen lance -->
+  <rect x="293" y="42" width="14" height="298" rx="3" fill="#4a4a4a" stroke="#222" stroke-width="1.5"/>
+  <rect x="297" y="42" width="4" height="298" fill="#6f6f6f"/>
+  <!-- O2 jets from lance tip onto bath -->
+  <g stroke="#1e88e5" stroke-width="2">
+    <line x1="300" y1="342" x2="284" y2="360"/>
+    <line x1="300" y1="342" x2="294" y2="362"/>
+    <line x1="300" y1="342" x2="306" y2="362"/>
+    <line x1="300" y1="342" x2="316" y2="360"/>
+  </g>
+
+  <!-- trunnion (tilting axis) pins -->
+  <circle cx="190" cy="322" r="10" fill="#555" stroke="#222" stroke-width="1.5"/>
+  <circle cx="410" cy="322" r="10" fill="#555" stroke="#222" stroke-width="1.5"/>
+
+  <!-- labels -->
+  <text x="330" y="52" font-size="13" fill="#1e88e5" font-weight="bold">산소 랜스</text>
+  <text x="330" y="67" font-size="11" fill="#1e88e5">(O₂를 초음속으로 취입)</text>
+
+  <line x1="360" y1="352" x2="470" y2="352" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="474" y="356" font-size="12.5" fill="#5c4326">슬래그 (불순물)</text>
+
+  <line x1="370" y1="410" x2="470" y2="410" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="474" y="407" font-size="12.5" fill="#a86a00" font-weight="bold">용강 (쇳물)</text>
+  <text x="474" y="422" font-size="11" fill="#a86a00">탄소를 태워 낮추는 중</text>
+
+  <line x1="222" y1="250" x2="120" y2="250" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="20" y="246" font-size="12.5" fill="#7a4a15">내화물(내화 벽돌)</text>
+  <text x="20" y="261" font-size="11" fill="#7a4a15">고온을 견디는 안쪽 벽</text>
+
+  <line x1="205" y1="330" x2="120" y2="360" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="20" y="368" font-size="12.5" fill="#555">철피(강판 외피)</text>
+
+  <line x1="410" y1="322" x2="478" y2="300" stroke="#333" stroke-width="1.5" marker-end="url(#ar)"/>
+  <text x="482" y="296" font-size="12.5" fill="#333">경동(傾動)축</text>
+  <text x="482" y="311" font-size="11" fill="#777">기울여 쇳물을 따름</text>
+
+  <!-- charge note at mouth -->
+  <text x="300" y="378" text-anchor="middle" font-size="11" fill="#fff8f0">용선 + 고철(스크랩)</text>
+
+  <text x="300" y="600" text-anchor="middle" font-size="12" fill="#555">위에서 산소를 불어넣어 용선 속 탄소를 CO/CO₂로 태워 제거 → 강(steel)</text>
+  <text x="300" y="620" text-anchor="middle" font-size="11" fill="#888">반응열로 스스로 온도 유지(무연료) · 한 회분씩 처리하는 배치 공정</text>
+</svg>

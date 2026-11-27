@@ -1,0 +1,45 @@
+<svg viewBox="0 0 780 290" xmlns="http://www.w3.org/2000/svg" role="img" font-family="sans-serif">
+  <title>클러스터 연합학습</title>
+  <desc>클라이언트를 특성 기반으로 유사한 그룹으로 분류하고, 클러스터별로 별도의 글로벌 모델을 연합학습한다.</desc>
+  <defs>
+    <marker id="arrow-g2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#4a7c59"/></marker>
+    <marker id="arrow-o2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="#c2683f"/></marker>
+  </defs>
+  <rect x="0" y="0" width="780" height="290" rx="14" fill="#faf9f6"/>
+
+  <text x="200" y="34" text-anchor="middle" font-size="13.5" font-weight="700" fill="#2b2823">클라이언트 특성 공간</text>
+
+  <!-- cluster 1 -->
+  <ellipse cx="150" cy="115" rx="80" ry="52" fill="none" stroke="#4a7c59" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <circle cx="120" cy="100" r="7" fill="#4a7c59"/>
+  <circle cx="160" cy="90" r="7" fill="#4a7c59"/>
+  <circle cx="140" cy="135" r="7" fill="#4a7c59"/>
+  <circle cx="185" cy="125" r="7" fill="#4a7c59"/>
+  <text x="150" y="185" text-anchor="middle" font-size="11" fill="#4a7c59">클러스터 1 (비슷한 분포 그룹)</text>
+
+  <!-- cluster 2 -->
+  <ellipse cx="270" cy="215" rx="76" ry="46" fill="none" stroke="#c2683f" stroke-width="1.6" stroke-dasharray="6 4"/>
+  <circle cx="245" cy="205" r="7" fill="#c2683f"/>
+  <circle cx="285" cy="195" r="7" fill="#c2683f"/>
+  <circle cx="270" cy="235" r="7" fill="#c2683f"/>
+  <text x="270" y="278" text-anchor="middle" font-size="11" fill="#c2683f">클러스터 2 (다른 분포 그룹)</text>
+
+  <!-- 애매한 클라이언트 -->
+  <circle cx="330" cy="90" r="7" fill="#8a8377"/>
+  <text x="345" y="80" font-size="10.5" fill="#6b655c">신규/애매 → 업데이트 유사도로 배정</text>
+
+  <!-- arrows to models -->
+  <line x1="232" y1="105" x2="520" y2="95" stroke="#4a7c59" stroke-width="1.6" marker-end="url(#arrow-g2)"/>
+  <line x1="348" y1="215" x2="520" y2="200" stroke="#c2683f" stroke-width="1.6" marker-end="url(#arrow-o2)"/>
+
+  <!-- cluster models -->
+  <rect x="530" y="62" width="210" height="62" rx="10" fill="#eef2ea" stroke="#4a7c59" stroke-width="1.6"/>
+  <text x="635" y="88" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">클러스터 모델 W¹</text>
+  <text x="635" y="108" text-anchor="middle" font-size="10.5" fill="#6b655c">클러스터 내부에서만 집계</text>
+
+  <rect x="530" y="168" width="210" height="62" rx="10" fill="#f7ece5" stroke="#c2683f" stroke-width="1.6"/>
+  <text x="635" y="194" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">클러스터 모델 W²</text>
+  <text x="635" y="214" text-anchor="middle" font-size="10.5" fill="#6b655c">클러스터 내부에서만 집계</text>
+
+  <text x="635" y="262" text-anchor="middle" font-size="11" fill="#6b655c">극단적 이질성 → 유사 그룹별 모델로 분리 학습</text>
+</svg>

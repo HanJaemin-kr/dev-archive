@@ -1,0 +1,30 @@
+function solution(n) {
+  // 여기에 풀이 작성
+
+}
+
+const MOD = 1234567;
+const tests = [
+  { desc: 'n=0', input: 0, expected: 0 },
+  { desc: 'n=1', input: 1, expected: 1 },
+  { desc: 'n=3', input: 3, expected: 2 },
+  { desc: 'n=5', input: 5, expected: 5 },
+  { desc: 'n=10', input: 10, expected: 55 % MOD },
+  { desc: 'n=100000 (성능)', input: 100000, expected: null },
+];
+
+let pass = 0, fail = 0;
+tests.forEach(({ desc, input, expected }) => {
+  const start = performance.now();
+  const result = solution(input);
+  const ms = (performance.now() - start).toFixed(2);
+  if (expected === null) {
+    console.log(`[⏱️ ] ${desc} — ${ms}ms (result: ${result})`);
+    pass++; return;
+  }
+  const ok = result === expected;
+  console.log(`[${ok ? '✅' : '❌'}] ${desc} — ${ms}ms`);
+  if (!ok) { console.log(`     출력: ${result}`); console.log(`     기대: ${expected}`); }
+  ok ? pass++ : fail++;
+});
+console.log(`\n결과: ${pass}/${pass + fail} 통과`);

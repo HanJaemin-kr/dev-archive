@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>정렬 알고리즘 시각화</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Consolas, sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }
+
+h1 { text-align: center; font-size: 1.25rem; color: #fff; margin-bottom: 4px; }
+.tagline { text-align: center; font-size: 0.78rem; color: #555; margin-bottom: 16px; }
+
+.tabs { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab {
+  padding: 5px 15px; border: 1px solid #30363d; border-radius: 20px;
+  background: #161b22; color: #8b949e; cursor: pointer; font-size: 0.8rem; transition: all 0.15s;
+}
+.tab:hover { border-color: #4f8ef7; color: #4f8ef7; }
+.tab.active { background: #1f3a6e; border-color: #4f8ef7; color: #4f8ef7; font-weight: 700; }
+
+.main { display: flex; gap: 14px; max-width: 980px; margin: 0 auto; }
+
+.viz-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+
+.desc-box {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 9px 13px; font-size: 0.78rem; color: #8b949e; line-height: 1.6;
+}
+.desc-box b { color: #e6edf3; }
+
+.bars-wrap {
+  background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+  padding: 14px 10px 6px; display: flex; align-items: flex-end;
+  justify-content: center; gap: 4px; height: 210px;
+}
+
+.bar {
+  flex: 1; max-width: 54px; min-width: 14px;
+  border-radius: 3px 3px 0 0;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 4px; font-size: 0.7rem; font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  transition: height 0.18s ease, background-color 0.12s ease;
+  background: #1f4e8c;
+}
+.bar.sorted    { background: #1a5c35; }
+.bar.merge-l   { background: #7d5a00; }
+.bar.merge-r   { background: #7a3500; }
+.bar.comparing { background: #b38a00; }
+.bar.min-mark  { background: #0e6c75; }
+.bar.key       { background: #8a4500; }
+.bar.pivot     { background: #5a2d8c; }
+.bar.placing   { background: #8c1a1a; }
+.bar.swapping  { background: #8c1a1a; }
+
+/* highlight sits on top of sorted */
+.bar.sorted.comparing { background: #b38a00; }
+.bar.sorted.swapping  { background: #8c1a1a; }
+.bar.sorted.pivot     { background: #5a2d8c; }
+
+.stats { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat {
+  background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+  padding: 3px 10px; font-size: 0.75rem; color: #8b949e;
+}
+.stat b { color: #58a6ff; }
+
+.info { font-size: 0.76rem; color: #8b949e; min-height: 16px; }
+
+.controls { display: flex; gap: 7px; flex-wrap: wrap; }
+button {
+  padding: 6px 14px; border: 1px solid #30363d; border-radius: 6px;
+  cursor: pointer; font-size: 0.8rem; font-weight: 600;
+  background: #21262d; color: #c9d1d9; transition: all 0.12s;
+}
+button:hover:not(:disabled) { border-color: #8b949e; background: #2d333b; }
+button:disabled { opacity: 0.35; cursor: not-allowed; }
+#btn-start { background: #1a4731; border-color: #2ea043; color: #3fb950; }
+#btn-start:hover:not(:disabled) { background: #1f5c3d; }
+#btn-pause.is-paused { border-color: #e3b341; color: #e3b341; }
+
+.log-wrap {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+  padding: 8px 12px; max-height: 90px; overflow-y: auto;
+  font-size: 0.73rem; color: #6e7681; line-height: 1.85; flex-shrink: 0;
+}
+.log-wrap .hi  { color: #e3b341; }
+.log-wrap .ok  { color: #3fb950; }
+.log-wrap .inf { color: #58a6ff; }
+
+/* Code panel */
+.code-panel { width: 350px; flex-shrink: 0; display: flex; flex-direction: column; }
+.code-header {
+  background: #161b22; border: 1px solid #30363d; border-bottom: none;
+  border-radius: 8px 8px 0 0; padding: 7px 12px;
+  font-size: 0.72rem; color: #555;
+  display: flex; align-items: center; gap: 6px;
+}
+.cdot { width: 10px; height: 10px; border-radius: 50%; }
+.code-body {
+  background: #0d1117; border: 1px solid #30363d; border-radius: 0 0 8px 8px;
+  overflow-y: auto; max-height: 400px; min-height: 280px;
+  padding: 8px 0; font-family: 'Consolas', 'Fira Code', monospace; font-size: 0.77rem;
+}
+.cl { display: flex; padding: 1.5px 0; line-height: 1.6; transition: background 0.1s; }
+.cl.active { background: rgba(31,62,110,0.55); border-left: 2px solid #4f8ef7; }
+.cl .ln { width: 30px; text-align: right; padding-right: 10px; color: #3d4450; user-select: none; flex-shrink: 0; }
+.cl.active .ln { color: #4f8ef7; }
+.cl .lt { color: #c9d1d9; white-space: pre; }
+
+/* Syntax */
+.kw  { color: #ff7b72; }
+.fn  { color: #d2a8ff; }
+.cm  { color: #484f58; font-style: italic; }
+.nu  { color: #79c0ff; }
+.str { color: #a5d6ff; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: 0.7rem; }
+.li { display: flex; align-items: center; gap: 4px; color: #6e7681; }
+.ld { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+
+@media (max-width: 720px) { .main { flex-direction: column; } .code-panel { width: 100%; } }
+</style>
+</head>
+<body>
+
+<h1>정렬 알고리즘 시각화</h1>
+<p class="tagline">버블 · 선택 · 삽입 · 퀵 · 병합 · 힙 · 계수 정렬 — 코드와 함께 보기</p>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-algo="bubble">🫧 버블</button>
+  <button class="tab" data-algo="selection">🎯 선택</button>
+  <button class="tab" data-algo="insertion">🃏 삽입</button>
+  <button class="tab" data-algo="quick">⚡ 퀵</button>
+  <button class="tab" data-algo="merge">🔀 병합</button>
+  <button class="tab" data-algo="heap">🏔 힙</button>
+  <button class="tab" data-algo="counting">🔢 계수</button>
+</div>
+
+<div class="main">
+  <div class="viz-panel">
+    <div class="desc-box" id="desc"></div>
+    <div class="bars-wrap" id="bars"></div>
+    <div class="stats">
+      <div class="stat">비교 <b id="cmp">0</b>회</div>
+      <div class="stat">교환/이동 <b id="swp">0</b>회</div>
+      <div class="stat" id="stc"></div>
+      <div class="stat" id="ssc"></div>
+    </div>
+    <div class="info" id="info">시작 버튼을 눌러주세요</div>
+    <div class="controls">
+      <button id="btn-reset">🔀 초기화</button>
+      <button id="btn-start">▶ 시작</button>
+      <button id="btn-pause" disabled>⏸ 일시정지</button>
+      <button id="btn-speed">🐢 느림</button>
+    </div>
+    <div class="log-wrap" id="log">로그...</div>
+  </div>
+
+  <div class="code-panel">
+    <div class="code-header">
+      <div class="cdot" style="background:#f85149"></div>
+      <div class="cdot" style="background:#e3b341"></div>
+      <div class="cdot" style="background:#3fb950"></div>
+      <span id="ctitle" style="margin-left:6px;color:#8b949e"></span>
+    </div>
+    <div class="code-body" id="code-body"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────
+let arr = [], running = false, paused = false, stopped = false;
+let speedIdx = 0, currentAlgo = 'bubble';
+let cmpCnt = 0, swpCnt = 0;
+const SPEEDS = [650, 280, 90, 22];
+const SLABELS = ['🐢 느림', '🚶 보통', '🏃 빠름', '⚡ 초고속'];
+
+// ── Algorithms ─────────────────────────────────────────────
+const ALGOS = {
+  bubble: {
+    name: '버블 정렬', file: 'bubbleSort.js',
+    tc: 'O(n²) / 최선 O(n)', sc: 'O(1)',
+    desc: `<b>버블 정렬</b>: 인접한 두 원소를 비교해 큰 수를 오른쪽으로 밀어냅니다.<br>매 패스마다 가장 큰 수가 오른쪽 끝으로 확정됩니다. 교환이 없으면 조기 종료(최선 O(n)).`,
+    legend: [
+      { color: '#b38a00', label: '비교 중' },
+      { color: '#8c1a1a', label: '교환' },
+      { color: '#1a5c35', label: '확정' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">bubbleSort</span>(arr) {`,
+      `  <span class="kw">const</span> n = arr.length;`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="nu">0</span>; i < n - <span class="nu">1</span>; i++) {`,
+      `    <span class="kw">let</span> swapped = <span class="kw">false</span>;`,
+      `    <span class="kw">for</span> (<span class="kw">let</span> j = <span class="nu">0</span>; j < n-<span class="nu">1</span>-i; j++) {`,
+      `      <span class="cm">// 인접 원소 비교</span>`,
+      `      <span class="kw">if</span> (arr[j] > arr[j+<span class="nu">1</span>]) {`,
+      `        swap(arr, j, j+<span class="nu">1</span>);`,
+      `        swapped = <span class="kw">true</span>;`,
+      `      }`,
+      `    }`,
+      `    <span class="cm">// 교환 없으면 조기 종료</span>`,
+      `    <span class="kw">if</span> (!swapped) <span class="kw">break</span>;`,
+      `  }`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      const n = arr.length;
+      for (let i = 0; i < n - 1; i++) {
+        sl(2); let swapped = false; sl(3);
+        for (let j = 0; j < n - 1 - i; j++) {
+          sl(4); ic();
+          rdr({ comparing: [j, j+1], sortedFrom: n - i });
+          await slp(); sl(6);
+          if (arr[j] > arr[j+1]) {
+            sl(7); is();
+            lg(`🔄 <span class="hi">${arr[j]}</span> ↔ <span class="hi">${arr[j+1]}</span>`);
+            [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
+            rdr({ swapping: [j, j+1], sortedFrom: n - i });
+            await slp(); swapped = true;
+          }
+        }
+        sl(12);
+        lg(`<span class="ok">✓ 패스 ${i+1} — ${arr[n-1-i]} 확정</span>`);
+        rdr({ sortedFrom: n - 1 - i });
+        if (!swapped) { lg(`<span class="inf">⚡ 조기 종료 (이미 정렬됨)</span>`); break; }
+        await slp();
+      }
+      rdr({ sortedFrom: 0 });
+    }
+  },
+
+  selection: {
+    name: '선택 정렬', file: 'selectionSort.js',
+    tc: 'O(n²)', sc: 'O(1)',
+    desc: `<b>선택 정렬</b>: 매 패스마다 남은 원소 중 최솟값을 찾아 맨 앞 자리로 이동시킵니다.<br>비교 횟수는 항상 n(n-1)/2로 일정합니다. 최선/최악 모두 O(n²).`,
+    legend: [
+      { color: '#0e6c75', label: '현재 최솟값' },
+      { color: '#b38a00', label: '비교 중' },
+      { color: '#8c1a1a', label: '교환' },
+      { color: '#1a5c35', label: '확정' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">selectionSort</span>(arr) {`,
+      `  <span class="kw">const</span> n = arr.length;`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="nu">0</span>; i < n - <span class="nu">1</span>; i++) {`,
+      `    <span class="cm">// i번째 자리에 넣을 최솟값 탐색</span>`,
+      `    <span class="kw">let</span> minIdx = i;`,
+      `    <span class="kw">for</span> (<span class="kw">let</span> j = i+<span class="nu">1</span>; j < n; j++) {`,
+      `      <span class="kw">if</span> (arr[j] < arr[minIdx]) {`,
+      `        minIdx = j;`,
+      `      }`,
+      `    }`,
+      `    <span class="cm">// 최솟값을 앞으로 교환</span>`,
+      `    swap(arr, i, minIdx);`,
+      `  }`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      const n = arr.length;
+      for (let i = 0; i < n - 1; i++) {
+        sl(2); let minIdx = i; sl(4);
+        for (let j = i + 1; j < n; j++) {
+          sl(5); ic();
+          rdr({ comparing: [j], minMark: minIdx, sortedUpTo: i - 1 });
+          await slp(); sl(6);
+          if (arr[j] < arr[minIdx]) {
+            minIdx = j; sl(7);
+            lg(`최솟값 갱신 → <span class="hi">${arr[minIdx]}</span> (위치 ${minIdx})`);
+            rdr({ comparing: [j], minMark: minIdx, sortedUpTo: i - 1 });
+          }
+        }
+        sl(11);
+        if (minIdx !== i) {
+          is();
+          lg(`🔄 <span class="hi">${arr[i]}</span> ↔ <span class="hi">${arr[minIdx]}</span>`);
+          rdr({ swapping: [i, minIdx], sortedUpTo: i - 1 });
+          await slp();
+          [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+        }
+        lg(`<span class="ok">✓ ${arr[i]} → 위치 ${i} 확정</span>`);
+        rdr({ sortedUpTo: i });
+        await slp();
+      }
+      rdr({ sortedFrom: 0 });
+    }
+  },
+
+  insertion: {
+    name: '삽입 정렬', file: 'insertionSort.js',
+    tc: 'O(n²) / 최선 O(n)', sc: 'O(1)',
+    desc: `<b>삽입 정렬</b>: 카드를 한 장씩 뽑아 이미 정렬된 구간의 올바른 위치에 삽입합니다.<br>거의 정렬된 배열에서 O(n)에 가까운 성능. 소규모 배열에 효율적.`,
+    legend: [
+      { color: '#8a4500', label: '삽입할 키' },
+      { color: '#b38a00', label: '비교/이동' },
+      { color: '#1a5c35', label: '정렬된 구간' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">insertionSort</span>(arr) {`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="nu">1</span>; i < arr.length; i++) {`,
+      `    <span class="cm">// 삽입할 원소 추출</span>`,
+      `    <span class="kw">const</span> key = arr[i];`,
+      `    <span class="kw">let</span> j = i - <span class="nu">1</span>;`,
+      `    <span class="cm">// key보다 큰 원소를 오른쪽으로 이동</span>`,
+      `    <span class="kw">while</span> (j >= <span class="nu">0</span> && arr[j] > key) {`,
+      `      arr[j+<span class="nu">1</span>] = arr[j];`,
+      `      j--;`,
+      `    }`,
+      `    <span class="cm">// 올바른 위치에 삽입</span>`,
+      `    arr[j+<span class="nu">1</span>] = key;`,
+      `  }`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      const n = arr.length;
+      for (let i = 1; i < n; i++) {
+        sl(1); const key = arr[i]; sl(3);
+        let j = i - 1; sl(4);
+        lg(`키: <span class="hi">${key}</span> (위치 ${i})`);
+        rdr({ key: i, sortedUpTo: i - 1 }); await slp();
+        sl(6);
+        while (j >= 0 && arr[j] > key) {
+          ic();
+          rdr({ comparing: [j], key: j + 1, sortedUpTo: i - 1 }); await slp();
+          sl(7); is();
+          arr[j + 1] = arr[j];
+          rdr({ comparing: [j], key: j, sortedUpTo: i - 1 }); await slp();
+          j--; sl(6);
+        }
+        sl(11);
+        arr[j + 1] = key;
+        lg(`<span class="ok">✓ ${key} → 위치 ${j+1} 삽입</span>`);
+        rdr({ sortedUpTo: i }); await slp();
+      }
+      rdr({ sortedFrom: 0 });
+    }
+  },
+
+  quick: {
+    name: '퀵 정렬', file: 'quickSort.js',
+    tc: '평균 O(n log n) / 최악 O(n²)', sc: 'O(log n)',
+    desc: `<b>퀵 정렬</b>: 피벗을 기준으로 작은 값은 왼쪽, 큰 값은 오른쪽으로 분리(파티션) 후 재귀 호출합니다.<br>평균적으로 가장 빠른 비교 정렬입니다.`,
+    legend: [
+      { color: '#5a2d8c', label: '피벗' },
+      { color: '#b38a00', label: '비교 중' },
+      { color: '#8c1a1a', label: '교환' },
+      { color: '#1a5c35', label: '확정' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">quickSort</span>(arr, lo, hi) {`,
+      `  <span class="kw">if</span> (lo >= hi) <span class="kw">return</span>;`,
+      `  <span class="cm">// 마지막 원소를 피벗으로 선택</span>`,
+      `  <span class="kw">const</span> pivot = arr[hi];`,
+      `  <span class="kw">let</span> i = lo - <span class="nu">1</span>;`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> j = lo; j < hi; j++) {`,
+      `    <span class="kw">if</span> (arr[j] <= pivot) {`,
+      `      i++;`,
+      `      swap(arr, i, j);`,
+      `    }`,
+      `  }`,
+      `  <span class="cm">// 피벗을 제자리로</span>`,
+      `  swap(arr, i+<span class="nu">1</span>, hi);`,
+      `  <span class="kw">const</span> p = i + <span class="nu">1</span>;`,
+      `  <span class="cm">// 좌우 재귀 호출</span>`,
+      `  quickSort(arr, lo, p-<span class="nu">1</span>);`,
+      `  quickSort(arr, p+<span class="nu">1</span>, hi);`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      const confirmed = new Set();
+      async function partition(lo, hi) {
+        sl(3); rdr({ pivot: hi, confirmedSet: confirmed }); await slp();
+        let i = lo - 1; sl(5);
+        for (let j = lo; j < hi; j++) {
+          ic();
+          rdr({ pivot: hi, comparing: [j], confirmedSet: confirmed }); await slp();
+          sl(6);
+          if (arr[j] <= arr[hi]) {
+            i++; sl(8);
+            if (i !== j) {
+              is();
+              lg(`🔄 ${arr[i]} ↔ ${arr[j]}`);
+              rdr({ pivot: hi, swapping: [i, j], confirmedSet: confirmed }); await slp();
+              [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+          }
+          sl(5);
+        }
+        sl(12);
+        const p = i + 1;
+        is();
+        [arr[p], arr[hi]] = [arr[hi], arr[p]];
+        confirmed.add(p);
+        lg(`<span class="ok">피벗 ${arr[p]} → 위치 ${p} 확정</span>`);
+        rdr({ confirmedSet: confirmed }); await slp();
+        return p;
+      }
+      async function qs(lo, hi) {
+        sl(0);
+        if (lo >= hi) { sl(1); if (lo === hi) confirmed.add(lo); return; }
+        lg(`분할 범위: [${lo}..${hi}]`);
+        const p = await partition(lo, hi);
+        sl(15); await qs(lo, p - 1);
+        sl(16); await qs(p + 1, hi);
+      }
+      await qs(0, arr.length - 1);
+      rdr({ sortedFrom: 0 });
+    }
+  },
+
+  heap: {
+    name: '힙 정렬', file: 'heapSort.js',
+    tc: 'O(n log n)', sc: 'O(1) in-place',
+    desc: `<b>힙 정렬</b>: 최대 힙을 구성한 뒤 루트(최댓값)를 배열 끝으로 이동시키는 과정을 반복합니다.<br>추가 메모리 없이 O(n log n)이 항상 보장됩니다. 힙 성질: 모든 부모 ≥ 자식.`,
+    legend: [
+      { color: '#5a2d8c', label: '힙 루트' },
+      { color: '#b38a00', label: '부모-자식 비교' },
+      { color: '#8c1a1a', label: 'heapify 교환' },
+      { color: '#1a5c35', label: '확정' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">heapSort</span>(arr) {`,
+      `  <span class="kw">const</span> n = arr.length;`,
+      `  <span class="cm">// 최대 힙 구성</span>`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> i = Math.floor(n/<span class="nu">2</span>)-<span class="nu">1</span>; i >= <span class="nu">0</span>; i--)`,
+      `    <span class="fn">heapify</span>(arr, n, i);`,
+      `  <span class="cm">// 루트(최댓값)를 끝으로 이동 → 반복</span>`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> i = n-<span class="nu">1</span>; i > <span class="nu">0</span>; i--) {`,
+      `    swap(arr, <span class="nu">0</span>, i);`,
+      `    <span class="fn">heapify</span>(arr, i, <span class="nu">0</span>);`,
+      `  }`,
+      `}`,
+      ``,
+      `<span class="kw">function</span> <span class="fn">heapify</span>(arr, size, i) {`,
+      `  <span class="kw">let</span> largest = i;`,
+      `  <span class="kw">const</span> l = <span class="nu">2</span>*i+<span class="nu">1</span>, r = <span class="nu">2</span>*i+<span class="nu">2</span>;`,
+      `  <span class="kw">if</span> (l < size && arr[l] > arr[largest])`,
+      `    largest = l;`,
+      `  <span class="kw">if</span> (r < size && arr[r] > arr[largest])`,
+      `    largest = r;`,
+      `  <span class="kw">if</span> (largest !== i) {`,
+      `    swap(arr, i, largest);`,
+      `    <span class="fn">heapify</span>(arr, size, largest);`,
+      `  }`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      const n = arr.length;
+
+      async function heapify(size, i) {
+        sl(12); let largest = i;
+        const l = 2*i+1, r = 2*i+2;
+        sl(14);
+        if (l < size) {
+          ic();
+          rdr({ pivot: i, comparing: [i, l], sortedFrom: size }); await slp();
+          if (arr[l] > arr[largest]) { largest = l; sl(15); }
+        }
+        sl(16);
+        if (r < size) {
+          ic();
+          rdr({ pivot: i, comparing: [i, r], sortedFrom: size }); await slp();
+          if (arr[r] > arr[largest]) { largest = r; sl(17); }
+        }
+        sl(18);
+        if (largest !== i) {
+          is();
+          lg(`🔄 <span class="hi">${arr[i]}</span> ↔ <span class="hi">${arr[largest]}</span>`);
+          rdr({ swapping: [i, largest], sortedFrom: size }); await slp();
+          [arr[i], arr[largest]] = [arr[largest], arr[i]];
+          sl(19); await heapify(size, largest);
+        }
+      }
+
+      lg(`<span class="inf">1단계: 최대 힙 구성</span>`);
+      sl(3);
+      for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+        sl(4); await heapify(n, i);
+      }
+      lg(`<span class="ok">✓ 최대 힙 구성 완료</span>`);
+      rdr({ pivot: 0 }); await slp();
+
+      lg(`<span class="inf">2단계: 루트 추출 반복</span>`);
+      sl(6);
+      for (let i = n - 1; i > 0; i--) {
+        sl(7); is();
+        lg(`최댓값 <span class="hi">${arr[0]}</span> → 위치 ${i} 확정`);
+        rdr({ swapping: [0, i], sortedFrom: i + 1 }); await slp();
+        [arr[0], arr[i]] = [arr[i], arr[0]];
+        lg(`<span class="ok">✓ ${arr[i]} 확정</span>`);
+        rdr({ sortedFrom: i }); await slp();
+        sl(8); await heapify(i, 0);
+      }
+      rdr({ sortedFrom: 0 });
+    }
+  },
+
+  counting: {
+    name: '계수 정렬', file: 'countingSort.js',
+    tc: 'O(n + k)', sc: 'O(k)',
+    desc: `<b>계수 정렬</b>: 각 값의 등장 횟수를 카운팅한 뒤 재구성합니다. 비교 연산이 없어 O(n log n) 하한을 돌파합니다.<br>값의 범위 k가 작을 때만 유효합니다. 이 예시에서 k ≤ 20.`,
+    legend: [
+      { color: '#b38a00', label: '카운팅 중' },
+      { color: '#8c1a1a', label: '재구성 중' },
+      { color: '#1a5c35', label: '확정' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">countingSort</span>(arr) {`,
+      `  <span class="kw">const</span> min = Math.<span class="fn">min</span>(...arr);`,
+      `  <span class="kw">const</span> max = Math.<span class="fn">max</span>(...arr);`,
+      `  <span class="kw">const</span> count = <span class="kw">new</span> Array(max-min+<span class="nu">1</span>).fill(<span class="nu">0</span>);`,
+      `  <span class="cm">// 각 값의 등장 횟수 카운팅</span>`,
+      `  <span class="kw">for</span> (<span class="kw">const</span> v <span class="kw">of</span> arr)`,
+      `    count[v - min]++;`,
+      `  <span class="cm">// count 배열로 원본 배열 재구성</span>`,
+      `  <span class="kw">let</span> idx = <span class="nu">0</span>;`,
+      `  <span class="kw">for</span> (<span class="kw">let</span> i = <span class="nu">0</span>; i < count.length; i++) {`,
+      `    <span class="kw">while</span> (count[i]-- > <span class="nu">0</span>)`,
+      `      arr[idx++] = i + min;`,
+      `  }`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      const n = arr.length;
+      sl(1);
+      const min = Math.min(...arr);
+      sl(2);
+      const max = Math.max(...arr);
+      sl(3);
+      const count = new Array(max - min + 1).fill(0);
+      lg(`<span class="inf">값 범위: ${min} ~ ${max} (k = ${max - min + 1})</span>`);
+
+      // Phase 1: counting
+      lg(`<span class="inf">1단계: 카운팅</span>`);
+      sl(5);
+      for (let i = 0; i < n; i++) {
+        sl(6);
+        rdr({ comparing: [i] }); await slp();
+        count[arr[i] - min]++;
+        ic();
+        lg(`count[<span class="hi">${arr[i]}</span>] = ${count[arr[i] - min]}`);
+      }
+
+      // Phase 2: reconstruction
+      lg(`<span class="inf">2단계: 재구성</span>`);
+      sl(8); let idx = 0; sl(9);
+      for (let i = 0; i < count.length; i++) {
+        sl(10);
+        while (count[i] > 0) {
+          sl(11); count[i]--;
+          arr[idx] = i + min;
+          is();
+          lg(`배치: <span class="hi">${i + min}</span> → 위치 ${idx}`);
+          rdr({ placing: [idx], sortedUpTo: idx - 1 }); await slp();
+          rdr({ sortedUpTo: idx });
+          idx++;
+        }
+      }
+      rdr({ sortedFrom: 0 });
+    }
+  },
+
+  merge: {
+    name: '병합 정렬', file: 'mergeSort.js',
+    tc: 'O(n log n)', sc: 'O(n)',
+    desc: `<b>병합 정렬</b>: 배열을 반으로 나눠 재귀적으로 정렬한 뒤 두 정렬된 배열을 병합합니다.<br>항상 O(n log n)으로 안정적. 추가 메모리 O(n) 필요. 안정 정렬(Stable Sort).`,
+    legend: [
+      { color: '#7d5a00', label: '왼쪽 구간' },
+      { color: '#7a3500', label: '오른쪽 구간' },
+      { color: '#8c1a1a', label: '배치 중' },
+      { color: '#1a5c35', label: '정렬 완료' },
+    ],
+    code: [
+      `<span class="kw">function</span> <span class="fn">mergeSort</span>(arr, lo, hi) {`,
+      `  <span class="kw">if</span> (lo >= hi) <span class="kw">return</span>;`,
+      `  <span class="kw">const</span> mid = (lo + hi) >> <span class="nu">1</span>;`,
+      `  mergeSort(arr, lo, mid);`,
+      `  mergeSort(arr, mid+<span class="nu">1</span>, hi);`,
+      `  merge(arr, lo, mid, hi);`,
+      `}`,
+      ``,
+      `<span class="kw">function</span> <span class="fn">merge</span>(arr, lo, mid, hi) {`,
+      `  <span class="kw">const</span> L = arr.slice(lo, mid+<span class="nu">1</span>);`,
+      `  <span class="kw">const</span> R = arr.slice(mid+<span class="nu">1</span>, hi+<span class="nu">1</span>);`,
+      `  <span class="kw">let</span> i=<span class="nu">0</span>, j=<span class="nu">0</span>, k=lo;`,
+      `  <span class="kw">while</span> (i < L.length && j < R.length) {`,
+      `    <span class="kw">if</span> (L[i] <= R[j]) arr[k++] = L[i++];`,
+      `    <span class="kw">else</span>              arr[k++] = R[j++];`,
+      `  }`,
+      `  <span class="kw">while</span> (i < L.length) arr[k++] = L[i++];`,
+      `  <span class="kw">while</span> (j < R.length) arr[k++] = R[j++];`,
+      `}`,
+    ],
+    async run({ arr, sl, rdr, slp, lg, ic, is }) {
+      function rng(a, b) { const r=[]; for(let i=a;i<=b;i++) r.push(i); return r; }
+
+      async function ms(lo, hi) {
+        sl(0); if (lo >= hi) { sl(1); return; }
+        const mid = (lo + hi) >> 1; sl(2);
+        lg(`분할: [${lo}..${mid}] | [${mid+1}..${hi}]`);
+        rdr({ mergeL: rng(lo, mid), mergeR: rng(mid+1, hi) }); await slp();
+        sl(3); await ms(lo, mid);
+        sl(4); await ms(mid + 1, hi);
+        sl(5); await merge(lo, mid, hi);
+      }
+
+      async function merge(lo, mid, hi) {
+        sl(8);
+        const L = arr.slice(lo, mid + 1);
+        const R = arr.slice(mid + 1, hi + 1);
+        sl(9); let i=0, j=0, k=lo;
+        lg(`병합: [${lo}..${mid}] + [${mid+1}..${hi}]`);
+        sl(12);
+        const placed = [];
+        while (i < L.length && j < R.length) {
+          ic();
+          rdr({ mergeL: rng(lo+i, mid), mergeR: rng(mid+1+j, hi), placing: [...placed] }); await slp();
+          if (L[i] <= R[j]) { sl(13); arr[k++] = L[i++]; }
+          else               { sl(14); arr[k++] = R[j++]; }
+          is(); placed.push(k-1);
+          rdr({ mergeL: rng(lo+i, mid), mergeR: rng(mid+1+j, hi), placing: [...placed] }); await slp();
+        }
+        sl(16); while (i < L.length) { arr[k++] = L[i++]; is(); placed.push(k-1); }
+        sl(17); while (j < R.length) { arr[k++] = R[j++]; is(); placed.push(k-1); }
+        lg(`<span class="ok">✓ 병합 완료: [${lo}..${hi}]</span>`);
+        rdr({ placing: rng(lo, hi) }); await slp();
+      }
+
+      await ms(0, arr.length - 1);
+      rdr({ sortedFrom: 0 });
+    }
+  }
+};
+
+// ── DOM ────────────────────────────────────────────────────
+const barsEl  = document.getElementById('bars');
+const infoEl  = document.getElementById('info');
+const logEl   = document.getElementById('log');
+const codeEl  = document.getElementById('code-body');
+const descEl  = document.getElementById('desc');
+const legendEl= document.getElementById('legend');
+const ctitleEl= document.getElementById('ctitle');
+const cmpEl   = document.getElementById('cmp');
+const swpEl   = document.getElementById('swp');
+const tcEl    = document.getElementById('stc');
+const scEl    = document.getElementById('ssc');
+const btnStart= document.getElementById('btn-start');
+const btnReset= document.getElementById('btn-reset');
+const btnPause= document.getElementById('btn-pause');
+const btnSpeed= document.getElementById('btn-speed');
+
+// ── Render bars ────────────────────────────────────────────
+function rdr(st = {}) {
+  const max = Math.max(...arr);
+  barsEl.innerHTML = '';
+  const { comparing=[], swapping=[], sortedFrom, sortedUpTo, confirmedSet,
+          pivot, key, minMark, mergeL=[], mergeR=[], placing=[] } = st;
+  arr.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.height = (Math.round((v / max) * 178) + 14) + 'px';
+    bar.textContent = v;
+    if (sortedFrom !== undefined && i >= sortedFrom)    bar.classList.add('sorted');
+    if (sortedUpTo !== undefined && i <= sortedUpTo)    bar.classList.add('sorted');
+    if (confirmedSet && confirmedSet.has(i))            bar.classList.add('sorted');
+    if (mergeL.includes(i))   bar.classList.add('merge-l');
+    if (mergeR.includes(i))   bar.classList.add('merge-r');
+    if (placing.includes(i))  bar.classList.add('placing');
+    if (comparing.includes(i))bar.classList.add('comparing');
+    if (swapping.includes(i)) bar.classList.add('swapping');
+    if (pivot === i)          bar.classList.add('pivot');
+    if (key === i)            bar.classList.add('key');
+    if (minMark === i)        bar.classList.add('min-mark');
+    barsEl.appendChild(bar);
+  });
+}
+
+// ── Code highlight ─────────────────────────────────────────
+let activeLine = null;
+function buildCode(lines) {
+  codeEl.innerHTML = '';
+  lines.forEach((html, idx) => {
+    const d = document.createElement('div');
+    d.className = 'cl'; d.dataset.l = idx;
+    d.innerHTML = `<span class="ln">${idx+1}</span><span class="lt">${html}</span>`;
+    codeEl.appendChild(d);
+  });
+}
+function sl(n) {
+  if (activeLine) activeLine.classList.remove('active');
+  activeLine = codeEl.querySelector(`[data-l="${n}"]`);
+  if (activeLine) { activeLine.classList.add('active'); activeLine.scrollIntoView({block:'nearest'}); }
+}
+
+// ── Log ────────────────────────────────────────────────────
+function lg(msg) {
+  const d = document.createElement('div'); d.innerHTML = msg;
+  logEl.appendChild(d); logEl.scrollTop = logEl.scrollHeight;
+}
+
+// ── Sleep ──────────────────────────────────────────────────
+async function slp() {
+  await new Promise(r => setTimeout(r, SPEEDS[speedIdx]));
+  while (paused && !stopped) await new Promise(r => setTimeout(r, 60));
+  if (stopped) throw new Error('stopped');
+}
+
+// ── Stats ──────────────────────────────────────────────────
+function ic() { cmpEl.textContent = ++cmpCnt; }
+function is() { swpEl.textContent = ++swpCnt; }
+function resetStats() { cmpCnt=0; swpCnt=0; cmpEl.textContent='0'; swpEl.textContent='0'; }
+
+// ── Setup ──────────────────────────────────────────────────
+function setupAlgo(name) {
+  currentAlgo = name;
+  const a = ALGOS[name];
+  descEl.innerHTML = a.desc;
+  ctitleEl.textContent = a.file;
+  tcEl.innerHTML = `시간 <b>${a.tc}</b>`;
+  scEl.innerHTML = `공간 <b>${a.sc}</b>`;
+  buildCode(a.code);
+  activeLine = null;
+  legendEl.innerHTML = '';
+  a.legend.forEach(({ color, label }) => {
+    legendEl.innerHTML += `<div class="li"><div class="ld" style="background:${color}"></div>${label}</div>`;
+  });
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.algo === name));
+}
+
+function reset() {
+  if (running) return;
+  const n = 10;
+  const pool = Array.from({length: 20}, (_,i) => i+1);
+  arr = pool.sort(() => Math.random() - 0.5).slice(0, n);
+  rdr(); resetStats();
+  infoEl.textContent = '시작 버튼을 눌러주세요';
+  logEl.innerHTML = '';
+  if (activeLine) { activeLine.classList.remove('active'); activeLine = null; }
+}
+
+// ── Event Handlers ─────────────────────────────────────────
+btnStart.addEventListener('click', async () => {
+  if (running) return;
+  running = true; stopped = false; paused = false;
+  btnStart.disabled = true; btnReset.disabled = true;
+  btnPause.disabled = false;
+  logEl.innerHTML = ''; resetStats();
+  const ctx = { arr, sl, rdr, slp, lg, ic, is };
+  try {
+    infoEl.textContent = '정렬 중...';
+    await ALGOS[currentAlgo].run(ctx);
+    infoEl.textContent = `✅ 완료 — 비교 ${cmpCnt}회 · 교환/이동 ${swpCnt}회`;
+    lg(`<span class="ok">✅ 완료 — 비교 ${cmpCnt}회 / 교환·이동 ${swpCnt}회</span>`);
+  } catch(e) {
+    if (e.message !== 'stopped') throw e;
+    infoEl.textContent = '초기화됨';
+  } finally {
+    running = false;
+    btnStart.disabled = false; btnReset.disabled = false; btnPause.disabled = true;
+    btnPause.textContent = '⏸ 일시정지'; btnPause.classList.remove('is-paused');
+  }
+});
+
+btnReset.addEventListener('click', () => {
+  if (running) { stopped = true; paused = false; setTimeout(reset, 150); }
+  else reset();
+});
+
+btnPause.addEventListener('click', () => {
+  if (!running) return;
+  paused = !paused;
+  btnPause.textContent = paused ? '▶ 재개' : '⏸ 일시정지';
+  btnPause.classList.toggle('is-paused', paused);
+});
+
+btnSpeed.addEventListener('click', () => {
+  speedIdx = (speedIdx + 1) % SPEEDS.length;
+  btnSpeed.textContent = SLABELS[speedIdx];
+});
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const tab = e.target.closest('.tab');
+  if (!tab || running) return;
+  setupAlgo(tab.dataset.algo);
+  reset();
+});
+
+// ── Init ───────────────────────────────────────────────────
+setupAlgo('bubble');
+reset();
+</script>
+</body>
+</html>

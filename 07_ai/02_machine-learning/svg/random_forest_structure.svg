@@ -1,0 +1,46 @@
+<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" role="img" font-family="sans-serif">
+  <title>Random Forest 구조</title>
+  <desc>하나의 데이터셋에서 여러 부트스트랩 샘플을 만들고, 각 샘플로 독립적인 트리를 병렬 학습한 뒤 투표로 최종 예측을 만든다.</desc>
+  <rect x="0" y="0" width="860" height="300" rx="14" fill="#faf9f6"/>
+  <rect x="20" y="120" width="90" height="60" rx="8" fill="#c2683f" opacity="0.15" stroke="#c2683f"/>
+  <text x="65" y="145" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">전체</text>
+  <text x="65" y="162" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">데이터</text>
+  <g stroke="#b9b4aa" stroke-width="1.5" fill="none">
+    <path d="M110 150 C 150 60, 175 55, 205 55"/>
+    <path d="M110 150 C 150 150, 175 150, 205 150"/>
+    <path d="M110 150 C 150 245, 175 245, 205 245"/>
+  </g>
+  <text x="150" y="35" text-anchor="middle" font-size="11" fill="#6b655c">부트스트랩 샘플링</text>
+  <g transform="translate(215,20)">
+    <rect x="0" y="0" width="150" height="70" rx="8" fill="none" stroke="#c9c4ba"/>
+    <circle cx="75" cy="14" r="6" fill="#4a7c59"/><circle cx="50" cy="40" r="6" fill="#4a7c59"/><circle cx="100" cy="40" r="6" fill="#4a7c59"/>
+    <circle cx="35" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="63" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="88" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="113" cy="60" r="5" fill="#4a7c59" opacity="0.6"/>
+    <line x1="75" y1="14" x2="50" y2="40" stroke="#4a7c59"/><line x1="75" y1="14" x2="100" y2="40" stroke="#4a7c59"/><line x1="50" y1="40" x2="35" y2="60" stroke="#4a7c59"/><line x1="50" y1="40" x2="63" y2="60" stroke="#4a7c59"/><line x1="100" y1="40" x2="88" y2="60" stroke="#4a7c59"/><line x1="100" y1="40" x2="113" y2="60" stroke="#4a7c59"/>
+    <text x="-6" y="42" text-anchor="end" font-size="11" fill="#6b655c">Tree 1</text>
+  </g>
+  <g transform="translate(215,115)">
+    <rect x="0" y="0" width="150" height="70" rx="8" fill="none" stroke="#c9c4ba"/>
+    <circle cx="75" cy="14" r="6" fill="#4a7c59"/><circle cx="50" cy="40" r="6" fill="#4a7c59"/><circle cx="100" cy="40" r="6" fill="#4a7c59"/>
+    <circle cx="35" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="63" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="88" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="113" cy="60" r="5" fill="#4a7c59" opacity="0.6"/>
+    <line x1="75" y1="14" x2="50" y2="40" stroke="#4a7c59"/><line x1="75" y1="14" x2="100" y2="40" stroke="#4a7c59"/><line x1="50" y1="40" x2="35" y2="60" stroke="#4a7c59"/><line x1="50" y1="40" x2="63" y2="60" stroke="#4a7c59"/><line x1="100" y1="40" x2="88" y2="60" stroke="#4a7c59"/><line x1="100" y1="40" x2="113" y2="60" stroke="#4a7c59"/>
+    <text x="-6" y="42" text-anchor="end" font-size="11" fill="#6b655c">Tree 2</text>
+  </g>
+  <g transform="translate(215,210)">
+    <rect x="0" y="0" width="150" height="70" rx="8" fill="none" stroke="#c9c4ba"/>
+    <circle cx="75" cy="14" r="6" fill="#4a7c59"/><circle cx="50" cy="40" r="6" fill="#4a7c59"/><circle cx="100" cy="40" r="6" fill="#4a7c59"/>
+    <circle cx="35" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="63" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="88" cy="60" r="5" fill="#4a7c59" opacity="0.6"/><circle cx="113" cy="60" r="5" fill="#4a7c59" opacity="0.6"/>
+    <line x1="75" y1="14" x2="50" y2="40" stroke="#4a7c59"/><line x1="75" y1="14" x2="100" y2="40" stroke="#4a7c59"/><line x1="50" y1="40" x2="35" y2="60" stroke="#4a7c59"/><line x1="50" y1="40" x2="63" y2="60" stroke="#4a7c59"/><line x1="100" y1="40" x2="88" y2="60" stroke="#4a7c59"/><line x1="100" y1="40" x2="113" y2="60" stroke="#4a7c59"/>
+    <text x="-6" y="42" text-anchor="end" font-size="11" fill="#6b655c">Tree N</text>
+  </g>
+  <g stroke="#b9b4aa" stroke-width="1.5" fill="none" marker-end="url(#rfarrow)">
+    <path d="M365 55 C 500 55, 560 150, 640 150"/>
+    <path d="M365 150 L 640 150"/>
+    <path d="M365 245 C 500 245, 560 150, 640 150"/>
+  </g>
+  <defs>
+    <marker id="rfarrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0 0 L6 3 L0 6 z" fill="#b9b4aa"/></marker>
+  </defs>
+  <rect x="645" y="115" width="120" height="70" rx="8" fill="#c2683f" opacity="0.15" stroke="#c2683f"/>
+  <text x="705" y="145" text-anchor="middle" font-size="13" font-weight="700" fill="#2b2823">투표 / 평균</text>
+  <text x="705" y="163" text-anchor="middle" font-size="11" fill="#6b655c">= 최종 예측</text>
+</svg>

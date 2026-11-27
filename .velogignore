@@ -1,0 +1,7 @@
+# Velog에 발행하지 않을 자동 생성/메타 파일
+# (velog_sync.py가 이 목록을 읽어 동기화 대상에서 제외)
+AGENTS.md
+CLAUDE.md
+KNOWLEDGE_MAP.md
+HANDOFF.md
+**/_index.md
